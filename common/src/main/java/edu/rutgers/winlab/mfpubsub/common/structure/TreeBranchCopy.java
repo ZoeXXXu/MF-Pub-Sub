@@ -34,6 +34,7 @@ public class TreeBranchCopy extends JSONMessage implements ISerializable {
     public TreeBranchCopy(GUID guid) {
         topicGUIDs = guid;
         trees = new ArrayList<>();
+        trees.add(new NA(3));
     }
 
 //    public void addBranch(GUID key, NA address) {
