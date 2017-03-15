@@ -5,7 +5,6 @@
  */
 package edu.rutgers.winlab.mfpubsub.router;
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.TestGenerator;
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterface;
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterfaceUDP;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketData;
@@ -16,7 +15,6 @@ import edu.rutgers.winlab.mfpubsub.common.structure.TreeBranch;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.SocketException;
 import java.util.HashMap;
 
 /**
@@ -187,14 +185,14 @@ public class TopologyReader {
 
         HashMap<NA, NetworkInterface> connectedRouter1 = new HashMap<>();
         connectedRouter1.put(na6, new NetworkInterfaceUDP(l12, l11));
-        PacketProcessorSubscriber sub1 = new PacketProcessorSubscriber(user1Guid, na7, connectedRouter1);
+        PacketProcessorEndHost sub1 = new PacketProcessorEndHost(user1Guid, na7, connectedRouter1);
         sub1.print(System.out.printf("user 1:")).println();
         sub1.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         sub1.start();
 
         HashMap<NA, NetworkInterface> connectedRouter2 = new HashMap<>();
         connectedRouter2.put(na6, new NetworkInterfaceUDP(l14, l13));
-        PacketProcessorSubscriber sub2 = new PacketProcessorSubscriber(user2Guid, na8, connectedRouter2);
+        PacketProcessorEndHost sub2 = new PacketProcessorEndHost(user2Guid, na8, connectedRouter2);
         sub2.print(System.out.printf("user 2:")).println();
         sub2.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         sub2.start();

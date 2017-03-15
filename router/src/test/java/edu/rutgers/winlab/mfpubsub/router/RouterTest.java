@@ -53,7 +53,7 @@ public class RouterTest {
      *
      */
     @Test
-    public void test() throws SocketException, IOException, InterruptedException {
+    public void testGetProcessor() throws SocketException, IOException, InterruptedException {
         NA na1 = new NA(1);
         NA na2 = new NA(2);
         NA na3 = new NA(3);
@@ -63,6 +63,7 @@ public class RouterTest {
 
         NA na7 = new NA(7);
         NA na8 = new NA(8);
+        NA na9 = new NA(9);
 
         SocketAddress l1 = new InetSocketAddress("127.0.0.1", 10000);
         SocketAddress l2 = new InetSocketAddress("127.0.0.1", 10002);
@@ -74,13 +75,16 @@ public class RouterTest {
         SocketAddress l8 = new InetSocketAddress("127.0.0.1", 10007);
         SocketAddress l9 = new InetSocketAddress("127.0.0.1", 10008);
         SocketAddress l10 = new InetSocketAddress("127.0.0.1", 10009);
-        
+
         SocketAddress l11 = new InetSocketAddress("127.0.0.1", 10010);
         SocketAddress l12 = new InetSocketAddress("127.0.0.1", 10011);
-        
+
         SocketAddress l13 = new InetSocketAddress("127.0.0.1", 10012);
         SocketAddress l14 = new InetSocketAddress("127.0.0.1", 10013);
-        
+
+        SocketAddress lp1 = new InetSocketAddress("127.0.0.1", 10014);
+        SocketAddress lp2 = new InetSocketAddress("127.0.0.1", 10015);
+
         byte[] srcGuidBuf = new byte[GUID.GUID_LENGTH];
         srcGuidBuf[GUID.GUID_LENGTH - 1] = 0x1;
         GUID srcGuid = new GUID(srcGuidBuf);
@@ -97,22 +101,36 @@ public class RouterTest {
         byte[] user2GuidBuf = new byte[GUID.GUID_LENGTH];
         user2GuidBuf[GUID.GUID_LENGTH - 1] = 0x4;
         GUID user2Guid = new GUID(user2GuidBuf);
-        
+        byte[] pubGuidBuf = new byte[GUID.GUID_LENGTH];
+        pubGuidBuf[GUID.GUID_LENGTH - 1] = 0x5;
+        GUID pubGuid = new GUID(pubGuidBuf);
+
         byte[] payloadBuf = new byte[30];
         for (int i = 0; i < payloadBuf.length; i++) {
             payloadBuf[i] = (byte) (i & 0xFF);
         }
 
+        //publisher 
+        HashMap<NA, NetworkInterface> publisherNeighbor = new HashMap<>();
+        publisherNeighbor.put(na1, new NetworkInterfaceUDP(lp1, lp2));
+        PacketProcessorEndHost pub = new PacketProcessorEndHost(pubGuid, na9, publisherNeighbor);
+        pub.print(System.out.printf("pub:")).println();
+        pub.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
+        pub.start();
+
         //router 1
         HashMap<NA, NetworkInterface> neighbor1 = new HashMap<>();
         HashMap<NA, NA> routingt1 = new HashMap<>();
+        TreeBranch multi1 = new TreeBranch();
         neighbor1.put(na2, new NetworkInterfaceUDP(l1, l2));
+        neighbor1.put(na9, new NetworkInterfaceUDP(lp2, lp1));
         routingt1.put(na2, na2);
         routingt1.put(na4, na2);
         routingt1.put(na4, na2);
         routingt1.put(na5, na2);
         routingt1.put(na6, na2);
-        PacketProcessorRouter n1 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), new TreeBranch(), routingt1, na1, neighbor1);
+        multi1.addBranch(dstGuid, na4);
+        PacketProcessorRouter n1 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), multi1, routingt1, na1, neighbor1);
         n1.print(System.out.printf("n1:")).println();
         n1.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         n1.printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
@@ -129,7 +147,7 @@ public class RouterTest {
         routingt2.put(na4, na3);
         routingt2.put(na5, na3);
         routingt2.put(na6, na3);
-        multi2.addBranch(dstGuid, na4);
+//        multi2.addBranch(dstGuid, na4);
         PacketProcessorRouter n2 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), multi2, routingt2, na2, neighbor2);
         n2.print(System.out.printf("n2:")).println();
         n2.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
@@ -215,21 +233,21 @@ public class RouterTest {
 
         HashMap<NA, NetworkInterface> connectedRouter1 = new HashMap<>();
         connectedRouter1.put(na6, new NetworkInterfaceUDP(l12, l11));
-        PacketProcessorSubscriber sub1 = new PacketProcessorSubscriber(user1Guid, na7, connectedRouter1);
+        PacketProcessorEndHost sub1 = new PacketProcessorEndHost(user1Guid, na7, connectedRouter1);
         sub1.print(System.out.printf("user 1:")).println();
         sub1.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         sub1.start();
 
         HashMap<NA, NetworkInterface> connectedRouter2 = new HashMap<>();
         connectedRouter2.put(na6, new NetworkInterfaceUDP(l14, l13));
-        PacketProcessorSubscriber sub2 = new PacketProcessorSubscriber(user2Guid, na8, connectedRouter2);
+        PacketProcessorEndHost sub2 = new PacketProcessorEndHost(user2Guid, na8, connectedRouter2);
         sub2.print(System.out.printf("user 2:")).println();
         sub2.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         sub2.start();
 
         MFPacketData data = new MFPacketData(srcGuid, dstGuid, new NA(0), new MFPacketDataPayloadRandom(payloadBuf));
-        n1.send(na2, data);
-
+//        n1.send(na2, data);
+        pub.send(na1, data);
 
         Thread.sleep(3000);
         System.out.println("Stopping...");
@@ -239,6 +257,7 @@ public class RouterTest {
         n4.stop();
         n5.stop();
         n6.stop();
+//        new TopologyReader().testGetProcessor();
     }
 
 }

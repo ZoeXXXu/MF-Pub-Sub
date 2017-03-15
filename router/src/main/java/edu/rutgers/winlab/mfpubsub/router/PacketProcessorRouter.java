@@ -1,9 +1,10 @@
+package edu.rutgers.winlab.mfpubsub.router;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.rutgers.winlab.mfpubsub.router;
 
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterface;
 import edu.rutgers.winlab.mfpubsub.common.elements.PacketProcessor;
@@ -61,10 +62,7 @@ public class PacketProcessorRouter extends PacketProcessor {
             InvokePacket(key, (NA) multicastTable.getTree(key).get(0));
         } else if (packet.getDstNA().equals(getNa())) {
             if (packet.getType() == MFPacketData.MF_PACKET_TYPE_DATA) {
-                //look up MT
-//                getNa().print(System.out.printf("TODO: MT look up function, return true if found it...")).println();
-                packet.print(getNa().print(System.out.printf("receive packet from ")).printf("packet = ")).println();
-                //only na 4 will do this
+                packet.print(getNa().print(System.out.printf("receive packet at ")).printf("packet = ")).println();
                 LookUpMulticastTable((MFPacketData) packet);
             } else if (packet.getType() == MFPacketGNRS.MF_PACKET_TYPE_GNRS) {
                 getNa().print(System.out.printf("GNRS packet process haven't been done, temperally skip!"));
@@ -182,6 +180,6 @@ public class PacketProcessorRouter extends PacketProcessor {
     private void LoopUpLocalGUIDTable(MFPacketData packet, GUID key) throws IOException {
         NA dstna = localGUIDTable.get(key);
         getNa().print(System.out.printf("transmist by ")).println();
-        sendToNeighbor(dstna, new MFPacketData(packet.getsrcGuid(), key, dstna, new MFPacketData(packet.getsrcGuid(), packet.getdstGuid(), new NA(0), packet.getPayload())));
+        sendToNeighbor(dstna, new MFPacketData(packet.getsrcGuid(), key, dstna, packet));
     }
 }
