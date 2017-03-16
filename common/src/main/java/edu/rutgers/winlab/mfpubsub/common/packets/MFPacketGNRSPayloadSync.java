@@ -13,15 +13,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  *
  * @author zoe
  */
-public class MFPacketGNRSPayloadAssociation extends MFPacketGNRSPayload {
+public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
 
-    public static final byte MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOCIATION = 2;
+    public static final byte MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC = 2;
 
     private final GUID topicGUID;
 
@@ -31,16 +32,16 @@ public class MFPacketGNRSPayloadAssociation extends MFPacketGNRSPayload {
 
     private final byte[] NAs;
 
-    public MFPacketGNRSPayloadAssociation(GUID topicGUID, int numofGUID, List<GUID> GUIDs, List<NA> NAs) throws IOException {
-        super(MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOCIATION);
+    public MFPacketGNRSPayloadSync(GUID topicGUID, int numofGUID, List<GUID> GUIDs, List<NA> NAs) throws IOException {
+        super(MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC);
         this.topicGUID = topicGUID;
         this.numofGUID = numofGUID;
         this.NAs = NAListToByte(NAs);
         this.GUIDs = GUIDListToByte(GUIDs);
     }
 
-    public MFPacketGNRSPayloadAssociation(GUID topicGUID, int numofGUID, byte[] GUIDs, byte[] NAs) {
-        super(MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOCIATION);
+    public MFPacketGNRSPayloadSync(GUID topicGUID, int numofGUID, byte[] GUIDs, byte[] NAs) {
+        super(MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC);
         this.topicGUID = topicGUID;
         this.numofGUID = numofGUID;
         this.GUIDs = GUIDs;
@@ -49,13 +50,12 @@ public class MFPacketGNRSPayloadAssociation extends MFPacketGNRSPayload {
 
     public static MFPacketGNRSPayload createMFGNRSPacketPayloadAssociation(byte[] buf, int[] pos) throws IOException {
         GUID topicGUID = GUID.create(buf, pos);
-        int numofGUID = Helper.readInt(buf, pos[0]);
-        pos[0] += 4;
+        int numofGUID = Helper.readInt(buf, pos);
         byte[] guids = new byte[numofGUID * GUID.GUID_LENGTH];
         System.arraycopy(buf, pos[0], guids, 0, guids.length);
         byte[] nas = new byte[buf.length - pos[0] - guids.length];
         System.arraycopy(buf, pos[0] + guids.length, nas, 0, nas.length);
-        return new MFPacketGNRSPayloadAssociation(topicGUID, numofGUID, guids, nas);
+        return new MFPacketGNRSPayloadSync(topicGUID, numofGUID, guids, nas);
     }
 
     @Override
@@ -91,4 +91,27 @@ public class MFPacketGNRSPayloadAssociation extends MFPacketGNRSPayload {
         }
         return stream.toByteArray();
     }
+
+    public List<NA> getNAs() throws IOException {
+        ArrayList<NA> ret = new ArrayList<>();
+        int[] pos = new int[]{0};
+        while (pos[0] < NAs.length) {
+            ret.add(NA.create(NAs, pos));
+        }
+        return ret;
+    }
+
+    public GUID getTopicGUID() {
+        return topicGUID;
+    }
+
+    public List<GUID> getGUIDs() {
+        ArrayList<GUID> ret = new ArrayList<>();
+        int[] pos = new int[]{0};
+        while (pos[0] < GUIDs.length) {
+            ret.add(GUID.create(GUIDs, pos));
+        }
+        return ret;
+    }
+
 }

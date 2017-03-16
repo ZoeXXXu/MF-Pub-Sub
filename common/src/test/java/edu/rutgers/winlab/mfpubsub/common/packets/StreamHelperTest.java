@@ -7,13 +7,10 @@ package edu.rutgers.winlab.mfpubsub.common.packets;
 
 import edu.rutgers.winlab.mfpubsub.common.Helper;
 import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -47,7 +44,7 @@ public class StreamHelperTest {
         byte[] buf = baos.toByteArray();
         Helper.printBuf(System.out, buf, 0, buf.length);
         System.out.println();
-        System.out.printf("0x%x%n", Helper.readInt(buf, 0));
+        System.out.printf("0x%x%n", Helper.readInt(buf, new int[]{0}));
     }
 
     @org.junit.Test
@@ -57,7 +54,7 @@ public class StreamHelperTest {
         byte[] buf = baos.toByteArray();
         Helper.printBuf(System.out, buf, 0, buf.length);
         System.out.println();
-        System.out.printf("0x%x%n", Helper.readInt(buf, 0));
+        System.out.printf("0x%x%n", Helper.readInt(buf, new int[]{0}));
     }
 
     @org.junit.Test
@@ -67,6 +64,6 @@ public class StreamHelperTest {
         byte[] buf = baos.toByteArray();
         Helper.printBuf(System.out, buf, 0, buf.length);
         System.out.println();
-        System.out.printf("0x%x%n", Helper.readInt(buf, 0));
+        System.out.printf("0x%x%n", Helper.readInt(buf, new int[]{0}));
     }
 }

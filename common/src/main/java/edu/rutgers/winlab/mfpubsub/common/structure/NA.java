@@ -57,8 +57,7 @@ public class NA extends Address {
     }
 
     public static NA create(byte[] packet, int[] pos) throws IOException {
-        int val = Helper.readInt(packet, pos[0]);
-        pos[0] += 4;
+        int val = Helper.readInt(packet, pos);
         return new NA(val);
     }
 

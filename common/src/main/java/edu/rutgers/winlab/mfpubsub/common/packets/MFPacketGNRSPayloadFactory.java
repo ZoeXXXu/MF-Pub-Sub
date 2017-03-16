@@ -20,8 +20,10 @@ public class MFPacketGNRSPayloadFactory {
                 return MFPacketGNRSPayloadQuery.createMFGNRSPacketPayloadQuery(packet, pos);
             case MFPacketGNRSPayloadResponse.MF_GNRS_PACKET_PAYLOAD_TYPE_RESPONSE:
                 return MFPacketGNRSPayloadResponse.createMFGNRSPacketPayloadResponse(packet, pos);
-            case MFPacketGNRSPayloadAssociation.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOCIATION:
-                return MFPacketGNRSPayloadAssociation.createMFGNRSPacketPayloadAssociation(packet, pos);
+            case MFPacketGNRSPayloadSync.MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC:
+                return MFPacketGNRSPayloadSync.createMFGNRSPacketPayloadAssociation(packet, pos);
+            case MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC:
+                return MFPacketGNRSPayloadAssoc.createMFPacketGNRSPayloadAssoc(packet, pos);
         }
         return null;
     }

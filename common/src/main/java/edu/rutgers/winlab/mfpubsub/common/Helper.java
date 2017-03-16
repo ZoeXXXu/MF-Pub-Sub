@@ -11,7 +11,7 @@ import java.io.PrintStream;
 import java.util.Random;
 
 /**
- * 
+ *
  * @author ubuntu
  */
 public class Helper {
@@ -25,11 +25,11 @@ public class Helper {
         stream.write(val & 0xFF);
     }
 
-    public static int readInt(byte[] buf, int pos)  {
-        int ret = ((buf[pos++]) & 0xFF) << 24;
-        ret += ((buf[pos++]) & 0xFF) << 16;
-        ret += ((buf[pos++]) & 0xFF) << 8;
-        ret += (buf[pos++]) & 0xFF;
+    public static int readInt(byte[] buf, int[] pos) {
+        int ret = ((buf[pos[0]++]) & 0xFF) << 24;
+        ret += ((buf[pos[0]++]) & 0xFF) << 16;
+        ret += ((buf[pos[0]++]) & 0xFF) << 8;
+        ret += (buf[pos[0]++]) & 0xFF;
         return ret;
     }
 
