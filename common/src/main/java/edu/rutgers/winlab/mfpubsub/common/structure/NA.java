@@ -14,7 +14,7 @@ import java.io.PrintStream;
  *
  * @author ubuntu
  */
-public class NA extends Address {
+public class NA implements Address {
 
     public static transient final int NA_SIZE = 4;
 

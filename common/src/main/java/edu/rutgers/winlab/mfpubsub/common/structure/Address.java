@@ -6,14 +6,12 @@
 package edu.rutgers.winlab.mfpubsub.common.structure;
 
 import edu.rutgers.winlab.mfpubsub.common.packets.ISerializable;
-import java.io.Serializable;
 
 /**
  *
  * @author zoe
- * @param <T>
  */
-public abstract class Address<T> extends JSONMessage implements ISerializable{
+public interface Address  extends ISerializable{
     
 //    public T get();    
     

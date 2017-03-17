@@ -17,7 +17,7 @@ import java.util.Arrays;
  *
  * @author ubuntu
  */
-public class GUID extends Address {
+public class GUID implements Address {
 
     public static final int GUID_LENGTH = 20;
 
