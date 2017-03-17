@@ -5,7 +5,6 @@ package edu.rutgers.winlab.mfpubsub.router;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterface;
 import edu.rutgers.winlab.mfpubsub.common.elements.PacketProcessor;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
@@ -30,7 +29,7 @@ public class PacketProcessorRouter extends PacketProcessor {
 
     private final HashMap<GUID, ArrayList<MFPacket>> pendingTable;
     private final HashMap<NA, NA> routingTable;
-    private final TreeBranch multicastTable;
+//    private final TreeBranch multicastTable;
     private final HashMap<GUID, NA> localGUIDTable;
     private final GUID GNRS_GUID;
 
@@ -57,10 +56,11 @@ public class PacketProcessorRouter extends PacketProcessor {
     @Override
     protected void handlePacket(MFPacket packet) throws IOException {
         if (packet.getDstNA().getVal() == 0) {
+            //validate
             GUID key = ((MFPacketData) packet).getdstGuid();
             QueryGNRS(key, packet);
             InvokePacket(key, (NA) multicastTable.getTree(key).get(0));
-        } else if (packet.getDstNA().equals(getNa())) {
+        } else if (packet.getDstNA().equals(getNa())) { // the packet is sent to myself
             if (packet.getType() == MFPacketData.MF_PACKET_TYPE_DATA) {
                 packet.print(getNa().print(System.out.printf("receive packet at ")).printf("packet = ")).println();
                 LookUpMulticastTable((MFPacketData) packet);
@@ -69,11 +69,11 @@ public class PacketProcessorRouter extends PacketProcessor {
             } else {
                 getNa().print(System.out.printf("PacketProcessorRouter.handlePacket(): shouldn't have such types."));
             }
-        } else {
+        } else { // i know where to forward the packet
             MFPacketData pkt = (MFPacketData) packet;
             NA dstna = LookUpRoutingTable(pkt.getDstNA());
             getNa().print(System.out.printf("transmist by ")).println();
-            sendToNeighbor(dstna, new MFPacketData(pkt.getsrcGuid(), pkt.getdstGuid(), pkt.getDstNA(), pkt.getPayload()));
+            sendToNeighbor(dstna, pkt);
         }
     }
 
@@ -127,16 +127,20 @@ public class PacketProcessorRouter extends PacketProcessor {
     private void InvokePacket(GUID key, NA na) throws IOException {
         getNa().print(System.out.printf("")).printf("invoke the paket with dstGUID: ");
         key.print(System.out.printf("")).println();
-        ArrayList<MFPacket> packets = pendingTable.get(key);
-        if (packets == null) {
-            throw new IOException(String.format("Cannot find packet: %s in %s", key, this));
-        }
-        pendingTable.remove(key);
-        for (MFPacket p : packets) {
-            PacketUpdate((MFPacketData) p, na);
+        ArrayList<MFPacket> packets = pendingTable.remove(key);
+        if (packets != null) {
+            for (MFPacket p : packets) {
+                PacketUpdate((MFPacketData) p, na);
+            }
         }
     }
 
+    /**
+     * 
+     * @param packet
+     * @param na
+     * @throws IOException 
+     */
     private void PacketUpdate(MFPacketData packet, NA na) throws IOException {
         NA dstna = LookUpRoutingTable(na);
         getNa().print(System.out.printf("transmist by ")).println();
@@ -152,17 +156,16 @@ public class PacketProcessorRouter extends PacketProcessor {
     }
 
     private void PTadd(GUID dst, MFPacket packet) {
-        if (pendingTable.containsKey(dst)) {
-            pendingTable.get(dst).add(packet);
-        } else {
-            pendingTable.put(dst, new ArrayList<MFPacket>());
-            pendingTable.get(dst).add(packet);
+        ArrayList<MFPacket> pendings = pendingTable.get(dst);
+        if (pendings == null) {
+            pendingTable.put(dst, pendings = new ArrayList<>());
         }
+        pendings.add(packet);
     }
 
     private void LookUpMulticastTable(MFPacketData packet) throws IOException {
         List<Address> nextHops = (List<Address>) multicastTable.getTree(packet.getdstGuid());
-        if(nextHops == null){
+        if (nextHops == null) {
             throw new IOException(String.format("no GUID %s exist in NA %s", packet.getdstGuid(), getNa().getVal()));
         }
         for (Address address : nextHops) {
