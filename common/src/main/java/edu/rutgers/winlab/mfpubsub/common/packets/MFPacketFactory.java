@@ -15,8 +15,7 @@ public class MFPacketFactory {
   
 
     public static MFPacket createPacket(byte[] packet, int[] pos) throws IOException {
-        byte type = packet[pos[0]];
-        pos[0]++;
+        byte type = packet[pos[0]++];
         switch (type) {
             case 0:
                 return MFPacketData.createDatapacket(packet, pos);

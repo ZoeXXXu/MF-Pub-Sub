@@ -27,6 +27,8 @@ public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
     private final GUID topicGUID;
 
     private final int numofGUID;
+    
+//    private final int numofNA;
 
     private final byte[] GUIDs;
 

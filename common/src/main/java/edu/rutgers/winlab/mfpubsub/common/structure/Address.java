@@ -13,6 +13,4 @@ import edu.rutgers.winlab.mfpubsub.common.packets.ISerializable;
  */
 public interface Address  extends ISerializable{
     
-//    public T get();    
-    
 }

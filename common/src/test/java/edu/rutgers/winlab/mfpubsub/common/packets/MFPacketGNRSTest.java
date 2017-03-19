@@ -10,6 +10,7 @@ import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import edu.rutgers.winlab.mfpubsub.common.Helper;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -72,8 +73,9 @@ public class MFPacketGNRSTest {
 //        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa, new MFPacketGNRSPayloadQuery(guid));
 //        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa, new MFPacketGNRSPayloadResponse(new NA(4)));
 //        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa, new MFPacketGNRSPayloadSync(guid, GUIDs.size(), GUIDs, NAs));
-        byte[] numofGUID = new byte[]{0, 0, 0, 1, 1};
+        byte[] numofGUID = new byte[]{0, 0, 0, 1, 100};
         byte[] numofNA = new byte[]{3, 2, 2, 1, 1};
+        Helper.printBuf(System.out.printf("numofGUID"), numofGUID, 0, numofGUID.length);
         NAs.add(new NA(1));
         NAs.add(new NA(2));
         NAs.add(new NA(3));
@@ -85,18 +87,18 @@ public class MFPacketGNRSTest {
         NAs.add(new NA(5));
         GUIDs.add(l1guid);
         GUIDs.add(l2guid);
-        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa, 
-                new MFPacketGNRSPayloadAssoc(guid, guid, numofGUID.length, GUIDs.size(), numofGUID, numofNA, NAs, GUIDs));
+//        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa, 
+//                new MFPacketGNRSPayloadAssoc(guid, guid, numofGUID.length, GUIDs.size(), numofGUID, numofNA, NAs, GUIDs));
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        pkt.serialize(baos);
-        byte[] pktBuf = baos.toByteArray();
-        Helper.printBuf(System.out, pktBuf, 0, pktBuf.length);
-        System.out.println();
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        pkt.serialize(baos);
+//        byte[] pktBuf = baos.toByteArray();
+//        Helper.printBuf(System.out, pktBuf, 0, pktBuf.length);
+//        System.out.println();
 
         int[] pos = {0};
-        MFPacket packet = MFPacketFactory.createPacket(pktBuf, pos);
-        packet.print(System.out);
+//        MFPacket packet = MFPacketFactory.createPacket(pktBuf, pos);
+//        packet.print(System.out);
 //        System.out.println("NA list: " + ((MFPacketGNRSPayloadSync)((MFPacketGNRS)packet).getPayload()).getNAs());
 //        System.out.println("GUID list: " + ((MFPacketGNRSPayloadSync)((MFPacketGNRS)packet).getPayload()).getGUIDs());
         System.out.println();

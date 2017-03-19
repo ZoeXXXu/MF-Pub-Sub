@@ -20,33 +20,39 @@ public class MFPacketData extends MFPacket {
     public static final byte MF_PACKET_TYPE_DATA = 0;
 
     private final GUID srcGUID, dstGUID;
-//    private final NA na;
+
+    private final byte SID;
+
     private final ISerializable payload;
 
-    public MFPacketData(GUID srcGUID, GUID dstGUID, NA na, ISerializable payload) {
+    public MFPacketData(GUID srcGUID, GUID dstGUID, NA na, byte SID, ISerializable payload) {
         super(MF_PACKET_TYPE_DATA, na, false);
         this.srcGUID = srcGUID;
         this.dstGUID = dstGUID;
-//        this.na = na;
+        this.SID = SID;
         this.payload = payload;
     }
-    
-    public GUID getdstGuid(){
+
+    public GUID getdstGuid() {
         return dstGUID;
     }
-    
-    public GUID getsrcGuid(){
+
+    public byte getSID() {
+        return SID;
+    }
+
+    public GUID getsrcGuid() {
         return srcGUID;
     }
 
     public ISerializable getPayload() {
         return payload;
     }
-            
+
     @Override
     public OutputStream serialize(OutputStream stream) throws IOException {
         super.serialize(stream);
-//        na.serialize(stream);
+        stream.write(SID);
         srcGUID.serialize(stream);
         dstGUID.serialize(stream);
         payload.serialize(stream);
@@ -55,10 +61,18 @@ public class MFPacketData extends MFPacket {
 
     public static MFPacketData createDatapacket(byte[] packet, int[] pos) throws IOException {
         NA na = NA.create(packet, pos);
+        byte SID = packet[pos[0]++];
         GUID srcGUID = GUID.create(packet, pos);
         GUID dstGUID = GUID.create(packet, pos);
         ISerializable payload = MFPacketDataPayloadFactory.createPayload(packet, pos);
-        return new MFPacketData(srcGUID, dstGUID, na, payload);
+        switch(SID){
+            case MFPacketDataPublish.MF_PACKET_DATA_SID_PUBLISH:
+                return new MFPacketDataPublish(srcGUID, dstGUID, na, payload);
+            case MFPacketDataUnicast.MF_PACKET_DATA_SID_UNICAST:
+                return new MFPacketDataUnicast(srcGUID, dstGUID, na, payload);
+            default:
+                throw new IllegalArgumentException("Invalid data packet server ID: " + SID);
+        }
     }
 
     @Override
