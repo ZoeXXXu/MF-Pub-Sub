@@ -11,7 +11,6 @@ import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPayloadRandom;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRS;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadQuery;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
-import edu.rutgers.winlab.mfpubsub.common.structure.TreeBranch;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -78,13 +77,6 @@ public class NetworkInterfaceUDPTest {
         for (int i = 0; i < payloadBuf.length; i++) {
             payloadBuf[i] = (byte) (i & 0xFF);
         }
-        
-        TreeBranch test = new TreeBranch();
-        test.addBranch(srcGuid, new NA(1));
-        test.addBranch(srcGuid, new NA(2));
-        test.addBranch(srcGuid, new NA(3));
-        test.addBranch(dstGuid, new NA(10));
-        test.addBranch(dstGuid, new NA(11));
         
         MFPacketDataPayloadRandom payload = new MFPacketDataPayloadRandom(payloadBuf);
 
