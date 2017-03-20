@@ -178,4 +178,16 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
     public HashMap<NA, List<Address>> getTree() {
         return treeH;
     }
+
+    public NA getRP() {
+        return RP;
+    }
+
+    public GUID getSubscriber() {
+        return subscriber;
+    }
+
+    public GUID getTopicGUID() {
+        return topicGUID;
+    }
 }

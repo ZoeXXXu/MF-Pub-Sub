@@ -25,7 +25,7 @@ public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
 
     public static final byte MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC = 2;
 
-    private final transient GUID topicGUID;
+    private final GUID topicGUID;
 
 //    private final int numofGUID;
 //    private final int numofNA;
@@ -37,12 +37,11 @@ public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
         super(MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC);
         this.topicGUID = topicGUID;
         this.multicastL = multicast;
-        this.multicast = ListToByte(topicGUID, multicast);
+        this.multicast = ListToByte(multicast);
     }
 
-    private byte[] ListToByte(GUID topic, List<Address> multicast) throws IOException {
+    private byte[] ListToByte(List<Address> multicast) throws IOException {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        topic.serialize(stream);
         for (Address addr : multicast) {
             if (addr instanceof NA) {
                 stream.write(MF_GNRS_PACKET_PAYLOAD_NA);
@@ -90,6 +89,7 @@ public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
     @Override
     public OutputStream serialize(OutputStream stream) throws IOException {
         super.serialize(stream);
+        topicGUID.serialize(stream);
         stream.write(multicast);
         return stream;
     }
