@@ -6,13 +6,17 @@
 package edu.rutgers.winlab.mfpubsub.common.packets;
 
 import edu.rutgers.winlab.mfpubsub.common.Helper;
+import edu.rutgers.winlab.mfpubsub.common.structure.Address;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -25,62 +29,53 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
     private final GUID subscriber;
 
     private final GUID topicGUID;
+    
+    private final NA RP;
 
-    private final int numofbranch;
+    private final byte[] tree;
 
-    private final int totalnumGUID;
+    private final transient HashMap<NA, List<Address>> treeH;
 
-    private final byte[] numofGUID;
-
-    private final byte[] numofNA;
-
-    private final byte[] NAtree;
-
-    private final byte[] GUIDtree;
-
-    public MFPacketGNRSPayloadAssoc(GUID subscriber, GUID topicGUID, int numofBranch, int totalnumGUID, byte[] numofGUID, byte[] numofNA, byte[] NAtree, byte[] GUIDtree) {
+//    private final int numofbranch;
+//
+//    private final int totalnumGUID;
+//
+//    private final byte[] numofGUID;
+//
+//    private final byte[] numofNA;
+//
+//    private final byte[] NAtree;
+//
+//    private final byte[] GUIDtree;
+    public MFPacketGNRSPayloadAssoc(GUID subscriber, GUID topicGUID, NA RP, HashMap<NA, List<Address>> tree) throws IOException {
         super(MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC);
         this.subscriber = subscriber;
         this.topicGUID = topicGUID;
-        this.numofbranch = numofBranch;
-        this.totalnumGUID = totalnumGUID;
-        this.numofGUID = numofGUID;
-        this.numofNA = numofNA;
-        this.NAtree = NAtree;
-        this.GUIDtree = GUIDtree;
+        this.RP = RP;
+        this.tree = ListToByte(tree);
+        this.treeH = tree;
     }
 
-    public MFPacketGNRSPayloadAssoc(GUID subscriber, GUID topicGUID, int numofBranch, int totalnumGUID, byte[] numofGUID, byte[] numofNA, List<NA> NAtree, List<GUID> GUIDtree) throws IOException {
-        super(MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC);
-        this.subscriber = subscriber;
-        this.topicGUID = topicGUID;
-        this.numofbranch = numofBranch;
-        this.totalnumGUID = totalnumGUID;
-        this.numofGUID = numofGUID;
-        this.numofNA = numofNA;
-        this.NAtree = NAListToByte(NAtree);
-        this.GUIDtree = GUIDListToByte(GUIDtree);
-    }
-
-    public static MFPacketGNRSPayload createMFPacketGNRSPayloadAssoc(byte[] buf, int[] pos) {
-//        Helper.printBuf(System.out, buf, pos[0], buf.length);
-        GUID subscriber = GUID.create(buf, pos);
-        GUID topic = GUID.create(buf, pos);
-        topic.print(System.out.printf("")).println();
-        int numofBranch = Helper.readInt(buf, pos);
-        int totalnumGUID = Helper.readInt(buf, pos);
-        byte[] numofGUID = new byte[numofBranch];
-        System.arraycopy(buf, pos[0], numofGUID, 0, numofGUID.length);
-        pos[0] += numofBranch;
-        byte[] numofNA = new byte[numofBranch];
-        System.arraycopy(buf, pos[0], numofNA, 0, numofNA.length);
-        pos[0] += numofBranch;
-        System.out.println("buf length: " + buf.length + ", pos[0]: " + pos[0] + ", total: " + totalnumGUID);
-        byte[] NAtree = new byte[buf.length - pos[0] - totalnumGUID * GUID.GUID_LENGTH];
-        System.arraycopy(buf, pos[0], NAtree, 0, NAtree.length);
-        byte[] GUIDtree = new byte[totalnumGUID * GUID.GUID_LENGTH];
-        System.arraycopy(buf, pos[0] + NAtree.length, GUIDtree, 0, GUIDtree.length);
-        return new MFPacketGNRSPayloadAssoc(subscriber, topic, numofBranch, totalnumGUID, numofGUID, numofNA, NAtree, GUIDtree);
+    private byte[] ListToByte(HashMap<NA, List<Address>> tree) throws IOException {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+//        topic.serialize(stream);
+        for (Map.Entry<NA, List<Address>> branch : tree.entrySet()) {
+            branch.getKey().serialize(stream);
+            List<Address> multicast = branch.getValue();
+            stream.write(multicast.size());
+            for (Address addr : multicast) {
+                if (addr instanceof NA) {
+                    stream.write(MF_GNRS_PACKET_PAYLOAD_NA);
+                    ((NA) addr).serialize(stream);
+                } else if (addr instanceof GUID) {
+                    stream.write(MF_GNRS_PACKET_PAYLOAD_GUID);
+                    ((GUID) addr).serialize(stream);
+                } else {
+                    throw new IOException("this address is neither NA or GUID.");
+                }
+            }
+        }
+        return stream.toByteArray();
     }
 
     @Override
@@ -88,10 +83,7 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
         super.print(ps.printf("LKP["));
         subscriber.print(ps.printf(", subscriber GUID="));
         topicGUID.print(ps.printf(", topic GUID="));
-        Helper.printBuf(ps.printf("NAnumBranch["), numofNA, 0, numofNA.length).printf("]");
-        Helper.printBuf(ps.printf("GUIDnumBranch["), numofGUID, 0, numofGUID.length).printf("]");
-        Helper.printBuf(ps.printf("NAtree["), NAtree, 0, NAtree.length).printf("]");
-        return Helper.printBuf(ps.printf("GUIDtree["), GUIDtree, 0, GUIDtree.length).printf("]");
+        return Helper.printBuf(ps.printf("MulticastTree["), tree, 0, tree.length).printf("]");
     }
 
     @Override
@@ -99,28 +91,91 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
         super.serialize(stream);
         subscriber.serialize(stream);
         topicGUID.serialize(stream);
-        Helper.writeInt(stream, numofbranch);
-        Helper.writeInt(stream, totalnumGUID);
-        stream.write(numofGUID);
-        stream.write(numofNA);
-        stream.write(NAtree);
-        stream.write(GUIDtree);
+//        stream.write((byte) 1);
+//        stream.write(MF_GNRS_PACKET_PAYLOAD_NA);
+        RP.serialize(stream);
+        stream.write(tree);
         return stream;
     }
 
-    private byte[] GUIDListToByte(List<GUID> na) throws IOException {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        for (GUID addr : na) {
-            addr.serialize(stream);
+    public static MFPacketGNRSPayload createMFPacketGNRSPayloadAssoc(byte[] buf, int[] pos) throws IOException {
+        GUID subscriber = GUID.create(buf, pos);
+        GUID topic = GUID.create(buf, pos);
+        NA RP = NA.create(buf, pos);
+        HashMap<NA, List<Address>> tree = new HashMap<>();
+        while (pos[0] < buf.length) {
+            tree.put(NA.create(buf, pos), ByteToBranch(buf, pos));
         }
-        return stream.toByteArray();
+        return new MFPacketGNRSPayloadAssoc(subscriber, topic, RP, tree);
     }
 
-    private byte[] NAListToByte(List<NA> na) throws IOException {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        for (NA addr : na) {
-            addr.serialize(stream);
+    private static List<Address> ByteToBranch(byte[] buf, int[] pos) throws IOException {
+        int num = buf[pos[0]++];
+        List<Address> ret = new ArrayList<>();
+        while (num-- > 0) {
+            byte type = buf[pos[0]++];
+            if (type == MF_GNRS_PACKET_PAYLOAD_NA) {
+                ret.add(NA.create(buf, pos));
+            } else if (type == MF_GNRS_PACKET_PAYLOAD_GUID) {
+                ret.add(GUID.create(buf, pos));
+            } else {
+                throw new IOException("this address is neither NA or GUID.");
+            }
         }
-        return stream.toByteArray();
+        return ret;
+    }
+    
+    
+//    public MFPacketGNRSPayloadAssoc(GUID subscriber, GUID topicGUID, int numofBranch, int totalnumGUID, byte[] numofGUID, byte[] numofNA, List<NA> NAtree, List<GUID> GUIDtree) throws IOException {
+//        super(MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC);
+//        this.subscriber = subscriber;
+//        this.topicGUID = topicGUID;
+//        this.numofbranch = numofBranch;
+//        this.totalnumGUID = totalnumGUID;
+//        this.numofGUID = numofGUID;
+//        this.numofNA = numofNA;
+//        this.NAtree = NAListToByte(NAtree);
+//        this.GUIDtree = GUIDListToByte(GUIDtree);
+//    }
+//
+//    public static MFPacketGNRSPayload createMFPacketGNRSPayloadAssoc(byte[] buf, int[] pos) {
+////        Helper.printBuf(System.out, buf, pos[0], buf.length);
+//        GUID subscriber = GUID.create(buf, pos);
+//        GUID topic = GUID.create(buf, pos);
+//        topic.print(System.out.printf("")).println();
+//        int numofBranch = Helper.readInt(buf, pos);
+//        int totalnumGUID = Helper.readInt(buf, pos);
+//        byte[] numofGUID = new byte[numofBranch];
+//        System.arraycopy(buf, pos[0], numofGUID, 0, numofGUID.length);
+//        pos[0] += numofBranch;
+//        byte[] numofNA = new byte[numofBranch];
+//        System.arraycopy(buf, pos[0], numofNA, 0, numofNA.length);
+//        pos[0] += numofBranch;
+//        System.out.println("buf length: " + buf.length + ", pos[0]: " + pos[0] + ", total: " + totalnumGUID);
+//        byte[] NAtree = new byte[buf.length - pos[0] - totalnumGUID * GUID.GUID_LENGTH];
+//        System.arraycopy(buf, pos[0], NAtree, 0, NAtree.length);
+//        byte[] GUIDtree = new byte[totalnumGUID * GUID.GUID_LENGTH];
+//        System.arraycopy(buf, pos[0] + NAtree.length, GUIDtree, 0, GUIDtree.length);
+//        return new MFPacketGNRSPayloadAssoc(subscriber, topic, numofBranch, totalnumGUID, numofGUID, numofNA, NAtree, GUIDtree);
+//    }
+//
+//    private byte[] GUIDListToByte(List<GUID> na) throws IOException {
+//        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+//        for (GUID addr : na) {
+//            addr.serialize(stream);
+//        }
+//        return stream.toByteArray();
+//    }
+//
+//    private byte[] NAListToByte(List<NA> na) throws IOException {
+//        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+//        for (NA addr : na) {
+//            addr.serialize(stream);
+//        }
+//        return stream.toByteArray();
+//    }
+
+    public HashMap<NA, List<Address>> getTree() {
+        return treeH;
     }
 }

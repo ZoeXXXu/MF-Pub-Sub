@@ -82,7 +82,7 @@ public class MFPacketDataTest {
         MFPacketDataPayloadRandom payload = new MFPacketDataPayloadRandom(payloadBuf);
         payload.print(System.out.printf("payload: ")).println();
 
-        MFPacketData dp = new MFPacketData(srcGUID, dstGUID, na, payload);
+        MFPacketData dp = new MFPacketDataPublish(srcGUID, dstGUID, na, payload);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         dp.serialize(baos);

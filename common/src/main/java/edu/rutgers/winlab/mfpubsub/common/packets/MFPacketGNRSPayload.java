@@ -14,7 +14,12 @@ import java.io.PrintStream;
  * @author ubuntu
  */
 public class MFPacketGNRSPayload implements ISerializable {
+
     private final byte type;
+
+    public static transient final byte MF_GNRS_PACKET_PAYLOAD_NA = 0;
+
+    public static transient final byte MF_GNRS_PACKET_PAYLOAD_GUID = 1;
 
     public MFPacketGNRSPayload(byte type) {
         this.type = type;
@@ -23,13 +28,11 @@ public class MFPacketGNRSPayload implements ISerializable {
     public byte getType() {
         return type;
     }
-    
-    
-    
+
     @Override
     public OutputStream serialize(OutputStream stream) throws IOException {
         stream.write(type);
-        return stream; 
+        return stream;
     }
 
     @Override

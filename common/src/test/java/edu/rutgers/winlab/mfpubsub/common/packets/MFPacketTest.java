@@ -58,7 +58,7 @@ public class MFPacketTest {
         for (int i = 0; i < 10; i++) {
             byte[] buf = new byte[]{(byte) i};
             MFPacketDataPayloadRandom pay = new MFPacketDataPayloadRandom(buf);
-            MFPacketData data = new MFPacketData(srcGUID, dstGUID, new NA(i), pay);
+            MFPacketData data = new MFPacketDataPublish(srcGUID, dstGUID, new NA(i), pay);
             packets1.add(new FIFOEntry<MFPacket>(data));
             packets2.add(data);
         }

@@ -28,11 +28,10 @@ public class MFPacketGNRS extends MFPacket {
 //    public NA getDstNa() {
 //        return dstNa;
 //    }
-
     public MFPacketGNRSPayload getPayload() {
         return payload;
-    }    
-    
+    }
+
     public MFPacketGNRS(NA srcNa, NA dstNa, MFPacketGNRSPayload payload) {
         super(MF_PACKET_TYPE_GNRS, dstNa, true);
         this.srcNa = srcNa;

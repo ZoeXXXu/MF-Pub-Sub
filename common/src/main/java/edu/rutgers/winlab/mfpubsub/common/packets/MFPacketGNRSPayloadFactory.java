@@ -21,7 +21,7 @@ public class MFPacketGNRSPayloadFactory {
             case MFPacketGNRSPayloadResponse.MF_GNRS_PACKET_PAYLOAD_TYPE_RESPONSE:
                 return MFPacketGNRSPayloadResponse.createMFGNRSPacketPayloadResponse(packet, pos);
             case MFPacketGNRSPayloadSync.MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC:
-                return MFPacketGNRSPayloadSync.createMFGNRSPacketPayloadAssociation(packet, pos);
+                return MFPacketGNRSPayloadSync.createMFPacketGNRSPayloadAssociation(packet, pos);
             case MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC:
                 return MFPacketGNRSPayloadAssoc.createMFPacketGNRSPayloadAssoc(packet, pos);
         }
