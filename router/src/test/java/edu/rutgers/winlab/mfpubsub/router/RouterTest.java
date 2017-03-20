@@ -10,8 +10,8 @@ import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterfaceUDP;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketData;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPayloadRandom;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPublish;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
-import edu.rutgers.winlab.mfpubsub.common.structure.TreeBranch;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -121,7 +121,6 @@ public class RouterTest {
         //router 1
         HashMap<NA, NetworkInterface> neighbor1 = new HashMap<>();
         HashMap<NA, NA> routingt1 = new HashMap<>();
-        TreeBranch multi1 = new TreeBranch();
         neighbor1.put(na2, new NetworkInterfaceUDP(l1, l2));
         neighbor1.put(na9, new NetworkInterfaceUDP(lp2, lp1));
         routingt1.put(na2, na2);
@@ -129,8 +128,9 @@ public class RouterTest {
         routingt1.put(na4, na2);
         routingt1.put(na5, na2);
         routingt1.put(na6, na2);
-        multi1.addBranch(dstGuid, na4);
-        PacketProcessorRouter n1 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), multi1, routingt1, na1, neighbor1);
+//        multi1.addBranch(dstGuid, na4);
+        PacketProcessorRouter n1 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), routingt1, na1, neighbor1);
+        n1.MTadd(dstGuid, na4);
         n1.print(System.out.printf("n1:")).println();
         n1.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         n1.printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
@@ -139,7 +139,6 @@ public class RouterTest {
         //router 2
         HashMap<NA, NetworkInterface> neighbor2 = new HashMap<>();
         HashMap<NA, NA> routingt2 = new HashMap<>();
-        TreeBranch multi2 = new TreeBranch();
         neighbor2.put(na1, new NetworkInterfaceUDP(l2, l1));
         neighbor2.put(na3, new NetworkInterfaceUDP(l3, l4));
         routingt2.put(na1, na1);
@@ -148,7 +147,7 @@ public class RouterTest {
         routingt2.put(na5, na3);
         routingt2.put(na6, na3);
 //        multi2.addBranch(dstGuid, na4);
-        PacketProcessorRouter n2 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), multi2, routingt2, na2, neighbor2);
+        PacketProcessorRouter n2 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), routingt2, na2, neighbor2);
         n2.print(System.out.printf("n2:")).println();
         n2.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         n2.printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
@@ -164,7 +163,7 @@ public class RouterTest {
         routingt3.put(na4, na4);
         routingt3.put(na5, na4);
         routingt3.put(na6, na4);
-        PacketProcessorRouter n3 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), new TreeBranch(), routingt3, na3, neighbor3);
+        PacketProcessorRouter n3 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), routingt3, na3, neighbor3);
         n3.print(System.out.printf("n3:")).println();
         n3.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         n3.printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
@@ -173,7 +172,6 @@ public class RouterTest {
         //router 4
         HashMap<NA, NetworkInterface> neighbor4 = new HashMap<>();
         HashMap<NA, NA> routingt4 = new HashMap<>();
-        TreeBranch multi4 = new TreeBranch();
         neighbor4.put(na3, new NetworkInterfaceUDP(l6, l5));
         neighbor4.put(na5, new NetworkInterfaceUDP(l7, l8));
         neighbor4.put(na6, new NetworkInterfaceUDP(l9, l10));
@@ -182,9 +180,9 @@ public class RouterTest {
         routingt4.put(na3, na3);
         routingt4.put(na5, na5);
         routingt4.put(na6, na6);
-//        multi4.addBranch(dstGuid, na5);
-        multi4.addBranch(dstGuid, na6);
-        PacketProcessorRouter n4 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), multi4, routingt4, na4, neighbor4);
+//        multi4.addBranch(dstGuid, na6);
+        PacketProcessorRouter n4 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), routingt4, na4, neighbor4);
+        n4.MTadd(dstGuid, na6);
         n4.print(System.out.printf("n4:")).println();
         n4.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         n4.printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
@@ -200,7 +198,7 @@ public class RouterTest {
         routingt5.put(na3, na4);
         routingt5.put(na4, na4);
         routingt5.put(na6, na4);
-        PacketProcessorRouter n5 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), new TreeBranch(), routingt5, na5, neighbor5);
+        PacketProcessorRouter n5 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), routingt5, na5, neighbor5);
         n5.print(System.out.printf("n5:")).println();
         n5.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         n5.printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
@@ -210,7 +208,6 @@ public class RouterTest {
         HashMap<NA, NetworkInterface> neighbor6 = new HashMap<>();
         HashMap<NA, NA> routingt6 = new HashMap<>();
         HashMap<GUID, NA> localGT6 = new HashMap<>();
-        TreeBranch multi6 = new TreeBranch();
         neighbor6.put(na4, new NetworkInterfaceUDP(l10, l9));
         neighbor6.put(na7, new NetworkInterfaceUDP(l11, l12));
         neighbor6.put(na8, new NetworkInterfaceUDP(l13, l14));
@@ -221,9 +218,11 @@ public class RouterTest {
         routingt6.put(na5, na4);
         localGT6.put(user1Guid, na7);
         localGT6.put(user2Guid, na8);
-        multi6.addBranch(dstGuid, user1Guid);
-        multi6.addBranch(dstGuid, user2Guid);
-        PacketProcessorRouter n6 = new PacketProcessorRouter(gnrs, localGT6, multi6, routingt6, na6, neighbor6);
+//        multi6.addBranch(dstGuid, user1Guid);
+//        multi6.addBranch(dstGuid, user2Guid);
+        PacketProcessorRouter n6 = new PacketProcessorRouter(gnrs, localGT6, routingt6, na6, neighbor6);
+        n6.MTadd(dstGuid, user1Guid);
+        n6.MTadd(dstGuid, user2Guid);
         n6.print(System.out.printf("n6:")).println();
         n6.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         n6.printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
@@ -245,7 +244,7 @@ public class RouterTest {
         sub2.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         sub2.start();
 
-        MFPacketData data = new MFPacketData(srcGuid, dstGuid, new NA(0), new MFPacketDataPayloadRandom(payloadBuf));
+        MFPacketData data = new MFPacketDataPublish(srcGuid, dstGuid, new NA(0), new MFPacketDataPayloadRandom(payloadBuf));
 //        n1.send(na2, data);
         pub.send(na1, data);
 

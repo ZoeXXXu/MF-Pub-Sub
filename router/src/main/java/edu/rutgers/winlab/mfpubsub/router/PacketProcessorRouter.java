@@ -10,10 +10,11 @@ import edu.rutgers.winlab.mfpubsub.common.elements.PacketProcessor;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacket;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketData;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPublish;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataUnicast;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRS;
 import edu.rutgers.winlab.mfpubsub.common.structure.Address;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
-import edu.rutgers.winlab.mfpubsub.common.structure.TreeBranch;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -27,15 +28,15 @@ import java.util.Map;
  */
 public class PacketProcessorRouter extends PacketProcessor {
 
-    private final HashMap<GUID, ArrayList<MFPacket>> pendingTable;
+    private final HashMap<GUID, ArrayList<MFPacketData>> pendingTable;
     private final HashMap<NA, NA> routingTable;
-//    private final TreeBranch multicastTable;
+    private final HashMap<GUID, ArrayList<Address>> multicastTable;
     private final HashMap<GUID, NA> localGUIDTable;
     private final GUID GNRS_GUID;
 
-    public PacketProcessorRouter(GUID GNRS, HashMap<GUID, NA> localGUIDTable, TreeBranch MulticastTable, HashMap<NA, NA> RoutingTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
+    public PacketProcessorRouter(GUID GNRS, HashMap<GUID, NA> localGUIDTable, HashMap<NA, NA> RoutingTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
         super(myNA, neighbors);
-        this.multicastTable = MulticastTable;
+        this.multicastTable = new HashMap<>();
         this.pendingTable = new HashMap<>();
         this.routingTable = RoutingTable;
         this.localGUIDTable = localGUIDTable;
@@ -55,35 +56,43 @@ public class PacketProcessorRouter extends PacketProcessor {
      */
     @Override
     protected void handlePacket(MFPacket packet) throws IOException {
-        if (packet.getDstNA().getVal() == 0) {
-            //validate
-            GUID key = ((MFPacketData) packet).getdstGuid();
-            QueryGNRS(key, packet);
-            InvokePacket(key, (NA) multicastTable.getTree(key).get(0));
+        if (packet.getDstNA().getVal() == 0) {//validate
+            MFPacketData pkt = (MFPacketData) packet;
+            GUID key = pkt.getdstGuid();
+            QueryGNRS(key, pkt);
+            InvokePacket(key, (NA) multicastTable.get(key).get(0));
         } else if (packet.getDstNA().equals(getNa())) { // the packet is sent to myself
             if (packet.getType() == MFPacketData.MF_PACKET_TYPE_DATA) {
                 packet.print(getNa().print(System.out.printf("receive packet at ")).printf("packet = ")).println();
-                LookUpMulticastTable((MFPacketData) packet);
+                MFPacketData pkt = (MFPacketData) packet;
+                switch (pkt.getSID()) {//TODO: if it is unicast, send by looking up LT; if it is publish: send by looking up MT
+                    case MFPacketDataPublish.MF_PACKET_DATA_SID_PUBLISH:
+                        PublishToMulticastGroup(pkt);
+                        return;
+                    case MFPacketDataUnicast.MF_PACKET_DATA_SID_UNICAST:
+                        SendToGUID(pkt, pkt.getdstGuid());
+                        return;
+                    default:
+                        System.err.println("The packet SID number is not exist.");
+                }
             } else if (packet.getType() == MFPacketGNRS.MF_PACKET_TYPE_GNRS) {
                 getNa().print(System.out.printf("GNRS packet process haven't been done, temperally skip!"));
             } else {
                 getNa().print(System.out.printf("PacketProcessorRouter.handlePacket(): shouldn't have such types."));
             }
         } else { // i know where to forward the packet
-            MFPacketData pkt = (MFPacketData) packet;
-            NA dstna = LookUpRoutingTable(pkt.getDstNA());
-            getNa().print(System.out.printf("transmist by ")).println();
-            sendToNeighbor(dstna, pkt);
+            Routing(packet);
         }
     }
 
     //this may need to be created at another class in mysql
-    private NA LookUpRoutingTable(NA na) throws IOException {
-        NA i = routingTable.get(na);
+    private void Routing(MFPacket packet) throws IOException {
+        NA i = routingTable.get(packet.getDstNA());
         if (i == null) {
-            throw new IOException(String.format("Cannot find next hop: %s on %s", na, this));
+            throw new IOException(String.format("Cannot find next hop: %s on %s", packet.getDstNA(), this));
         }
-        return i;
+        getNa().print(System.out.printf("transmist by ")).println();
+        sendToNeighbor(i, packet);
     }
 
     public void send(NA neighbor, MFPacket packet) throws IOException {
@@ -104,7 +113,7 @@ public class PacketProcessorRouter extends PacketProcessor {
 
     public PrintStream printMulticastTable(PrintStream ps) throws IOException {
         getNa().print(ps.printf("Node NA=")).println();
-        for (Map.Entry<GUID, ArrayList<Address>> entry : multicastTable.getTree().entrySet()) {
+        for (Map.Entry<GUID, ArrayList<Address>> entry : multicastTable.entrySet()) {
             entry.getKey().print(ps).printf(" -> ");
             for (Address a : entry.getValue()) {
                 a.print(ps).printf("; ");
@@ -119,7 +128,7 @@ public class PacketProcessorRouter extends PacketProcessor {
      * @param dstGuid
      * @param packet
      */
-    private void QueryGNRS(GUID dstGuid, MFPacket packet) {
+    private void QueryGNRS(GUID dstGuid, MFPacketData packet) {
         getNa().print(System.out.printf("TODO: query GNRS with provided GUID: ")).println();
         PTadd(dstGuid, packet);
     }
@@ -127,62 +136,64 @@ public class PacketProcessorRouter extends PacketProcessor {
     private void InvokePacket(GUID key, NA na) throws IOException {
         getNa().print(System.out.printf("")).printf("invoke the paket with dstGUID: ");
         key.print(System.out.printf("")).println();
-        ArrayList<MFPacket> packets = pendingTable.remove(key);
+        ArrayList<MFPacketData> packets = pendingTable.remove(key);
         if (packets != null) {
-            for (MFPacket p : packets) {
-                PacketUpdate((MFPacketData) p, na);
+            for (MFPacketData packet : packets) {
+                getNa().print(System.out.printf("transmist by ")).println();
+                Routing(new MFPacketDataPublish(packet.getsrcGuid(), packet.getdstGuid(), na, packet.getPayload()));
             }
         }
     }
 
-    /**
-     * 
-     * @param packet
-     * @param na
-     * @throws IOException 
-     */
-    private void PacketUpdate(MFPacketData packet, NA na) throws IOException {
-        NA dstna = LookUpRoutingTable(na);
+    private void RenewNAandSend(MFPacketData packet, NA na) throws IOException {
         getNa().print(System.out.printf("transmist by ")).println();
-        sendToNeighbor(dstna, new MFPacketData(packet.getsrcGuid(), packet.getdstGuid(), na, packet.getPayload()));
+        Routing(new MFPacketDataPublish(packet.getsrcGuid(), packet.getdstGuid(), na, packet.getPayload()));
     }
 
-    private void RTadd(NA dst, NA neighbor) {
-        routingTable.put(dst, neighbor);
-    }
-
-    private void RTdelete(NA delete) {
-        routingTable.remove(delete);
-    }
-
-    private void PTadd(GUID dst, MFPacket packet) {
-        ArrayList<MFPacket> pendings = pendingTable.get(dst);
-        if (pendings == null) {
-            pendingTable.put(dst, pendings = new ArrayList<>());
-        }
-        pendings.add(packet);
-    }
-
-    private void LookUpMulticastTable(MFPacketData packet) throws IOException {
-        List<Address> nextHops = (List<Address>) multicastTable.getTree(packet.getdstGuid());
-        if (nextHops == null) {
+    private void PublishToMulticastGroup(MFPacketData packet) throws IOException {
+        List<Address> multicast = (List<Address>) multicastTable.get(packet.getdstGuid());
+        if (multicast == null) {
             throw new IOException(String.format("no GUID %s exist in NA %s", packet.getdstGuid(), getNa().getVal()));
         }
-        for (Address address : nextHops) {
+        for (Address address : multicast) {
             if (address instanceof GUID) {
-                LoopUpLocalGUIDTable(packet, (GUID) address);
+                SendToGUID(packet, (GUID) address);
             } else if (address instanceof NA) {
                 NA na = (NA) address;
-                PacketUpdate(packet, na);
+                RenewNAandSend(packet, na);
             } else {
                 System.out.println("Something wrong this multicast table ");
             }
         }
     }
 
-    private void LoopUpLocalGUIDTable(MFPacketData packet, GUID key) throws IOException {
+    private void SendToGUID(MFPacketData packet, GUID key) throws IOException {
         NA dstna = localGUIDTable.get(key);
         getNa().print(System.out.printf("transmist by ")).println();
-        sendToNeighbor(dstna, new MFPacketData(packet.getsrcGuid(), key, dstna, packet));
+        sendToNeighbor(dstna, new MFPacketDataUnicast(packet.getsrcGuid(), key, dstna, packet));
+    }
+
+    public void RTadd(NA dst, NA neighbor) {
+        routingTable.put(dst, neighbor);
+    }
+
+    public void RTdelete(NA delete) {
+        routingTable.remove(delete);
+    }
+
+    public void PTadd(GUID dst, MFPacketData packet) {
+        ArrayList<MFPacketData> pendings = pendingTable.get(dst);
+        if (pendings == null) {
+            pendingTable.put(dst, pendings = new ArrayList<>());
+        }
+        pendings.add(packet);
+    }
+
+    public void MTadd(GUID topic, Address addr) {
+        ArrayList<Address> multicast = multicastTable.get(topic);
+        if (multicast == null) {
+            multicastTable.put(topic, multicast = new ArrayList<>());
+        }
+        multicast.add(addr);
     }
 }
