@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.rutgers.winlab.transmissionshared.endhost;
+package edu.rutgers.winlab.tmfpubsub.endhost;
 
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterface;
 import edu.rutgers.winlab.mfpubsub.common.elements.PacketProcessor;
