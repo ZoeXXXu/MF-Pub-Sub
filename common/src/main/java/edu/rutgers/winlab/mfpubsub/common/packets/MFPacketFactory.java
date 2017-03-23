@@ -21,6 +21,8 @@ public class MFPacketFactory {
                 return MFPacketData.createDatapacket(packet, pos);
             case 6:
                 return MFPacketGNRS.createGNRSpacket(packet, pos);
+            case 9:
+                return MFPacketNetworkRenew.createUpdatePacket(packet, pos);
             default:
                 throw new IllegalArgumentException("Invalid packet type: " + type);
         }
