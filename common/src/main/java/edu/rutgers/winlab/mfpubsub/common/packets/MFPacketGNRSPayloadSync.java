@@ -27,27 +27,22 @@ public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
 
     private final GUID topicGUID;
 
-//    private final int numofGUID;
-//    private final int numofNA;
-    private final byte[] multicast;
-
-    private final transient List<Address> multicastL;
+    private final transient List<Address> multicast;
 
     public MFPacketGNRSPayloadSync(GUID topicGUID, List<Address> multicast) throws IOException {
         super(MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC);
         this.topicGUID = topicGUID;
-        this.multicastL = multicast;
-        this.multicast = ListToByte(multicast);
+        this.multicast = multicast;
     }
 
     private byte[] ListToByte(List<Address> multicast) throws IOException {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         for (Address addr : multicast) {
             if (addr instanceof NA) {
-                stream.write(MF_GNRS_PACKET_PAYLOAD_NA);
+                stream.write(Address.MF_GNRS_PACKET_PAYLOAD_NA);
                 ((NA) addr).serialize(stream);
             } else if (addr instanceof GUID) {
-                stream.write(MF_GNRS_PACKET_PAYLOAD_GUID);
+                stream.write(Address.MF_GNRS_PACKET_PAYLOAD_GUID);
                 ((GUID) addr).serialize(stream);
             } else {
                 throw new IOException("this address is neither NA or GUID.");
@@ -68,9 +63,9 @@ public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
     private static Address ByteToAddress(byte[] buf, int[] pos) throws IOException {
         byte type = buf[pos[0]++];
         switch (type) {
-            case MF_GNRS_PACKET_PAYLOAD_NA:
+            case Address.MF_GNRS_PACKET_PAYLOAD_NA:
                 return NA.create(buf, pos);
-            case MF_GNRS_PACKET_PAYLOAD_GUID:
+            case Address.MF_GNRS_PACKET_PAYLOAD_GUID:
                 return GUID.create(buf, pos);
             default:
                 throw new IOException("this address is neither NA or GUID.");
@@ -82,71 +77,21 @@ public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
     ) {
         super.print(ps.printf("LKP["));
         topicGUID.print(ps.printf(", topic GUID="));
-//        return ps.printf("multicast list " + multicastL);
-        return Helper.printBuf(ps.printf("multicast["), multicast, GUID.GUID_LENGTH, multicast.length - GUID.GUID_LENGTH).printf("]");
+        return printMulticast(ps.printf("multicast address:"));
+    }
+
+    public PrintStream printMulticast(PrintStream ps) {
+        for (Address addr : multicast) {
+            addr.print(ps);
+        }
+        return ps;
     }
 
     @Override
     public OutputStream serialize(OutputStream stream) throws IOException {
         super.serialize(stream);
         topicGUID.serialize(stream);
-        stream.write(multicast);
+        stream.write(ListToByte(multicast));
         return stream;
     }
-
-//    public MFPacketGNRSPayloadSync(GUID topicGUID, int numofGUID, byte[] GUIDs, byte[] NAs) {
-//        super(MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC);
-//        this.topicGUID = topicGUID;
-//        this.numofGUID = numofGUID;
-//        this.GUIDs = GUIDs;
-//        this.NAs = NAs;
-//    }
-//
-//    public static MFPacketGNRSPayload createMFGNRSPacketPayloadAssociation(byte[] buf, int[] pos) throws IOException {
-//        GUID topicGUID = GUID.create(buf, pos);
-//        int numofGUID = Helper.readInt(buf, pos);
-//        byte[] guids = new byte[numofGUID * GUID.GUID_LENGTH];
-//        System.arraycopy(buf, pos[0], guids, 0, guids.length);
-//        byte[] nas = new byte[buf.length - pos[0] - guids.length];
-//        System.arraycopy(buf, pos[0] + guids.length, nas, 0, nas.length);
-//        return new MFPacketGNRSPayloadSync(topicGUID, numofGUID, guids, nas);
-//    }
-//
-//    private byte[] GUIDListToByte(List<GUID> na) throws IOException {
-//        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//        for (GUID addr : na) {
-//            addr.serialize(stream);
-//        }
-//        return stream.toByteArray();
-//    }
-//
-//    private byte[] NAListToByte(List<NA> na) throws IOException {
-//        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//        for (NA addr : na) {
-//            addr.serialize(stream);
-//        }
-//        return stream.toByteArray();
-//    }
-//
-//    public List<NA> getNAs() throws IOException {
-//        ArrayList<NA> ret = new ArrayList<>();
-//        int[] pos = new int[]{0};
-//        while (pos[0] < NAs.length) {
-//            ret.add(NA.create(NAs, pos));
-//        }
-//        return ret;
-//    }
-//
-//    public GUID getTopicGUID() {
-//        return topicGUID;
-//    }
-//
-//    public List<GUID> getGUIDs() {
-//        ArrayList<GUID> ret = new ArrayList<>();
-//        int[] pos = new int[]{0};
-//        while (pos[0] < GUIDs.length) {
-//            ret.add(GUID.create(GUIDs, pos));
-//        }
-//        return ret;
-//    }
 }

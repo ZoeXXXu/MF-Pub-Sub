@@ -11,6 +11,10 @@ import edu.rutgers.winlab.mfpubsub.common.packets.ISerializable;
  *
  * @author zoe
  */
-public interface Address  extends ISerializable{
-    
+public interface Address extends ISerializable {
+
+    public static final byte MF_GNRS_PACKET_PAYLOAD_NA = 0;
+
+    public static final byte MF_GNRS_PACKET_PAYLOAD_GUID = 1;
+
 }

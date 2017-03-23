@@ -17,10 +17,6 @@ public class MFPacketGNRSPayload implements ISerializable {
 
     private final byte type;
 
-    public static transient final byte MF_GNRS_PACKET_PAYLOAD_NA = 0;
-
-    public static transient final byte MF_GNRS_PACKET_PAYLOAD_GUID = 1;
-
     public MFPacketGNRSPayload(byte type) {
         this.type = type;
     }
