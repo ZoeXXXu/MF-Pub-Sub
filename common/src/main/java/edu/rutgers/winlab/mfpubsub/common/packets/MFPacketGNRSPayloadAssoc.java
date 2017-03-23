@@ -79,17 +79,17 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
         super.print(ps.printf("LKP["));
         subscriber.print(ps.printf(", subscriber GUID="));
         topicGUID.print(ps.printf(", topic GUID="));
-        return printTree(ps.printf("Tree: \n"));
+        return printTree(ps.printf("Tree:"));
     }
 
     public PrintStream printTree(PrintStream ps) {
         for (Map.Entry<NA, List<Address>> entry : tree.entrySet()) {
-            entry.getKey().print(ps).printf(" : ");
+            entry.getKey().print(ps).printf(":");
             List<Address> list = entry.getValue();
             for (Address addr : list) {
                 addr.print(ps);
             }
-            ps.printf(";");
+            ps.printf("; ");
         }
         return ps;
     }
