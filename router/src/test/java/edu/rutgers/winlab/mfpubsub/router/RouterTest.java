@@ -244,7 +244,7 @@ public class RouterTest {
         sub2.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         sub2.start();
 
-        MFPacketData data = new MFPacketDataPublish(srcGuid, dstGuid, new NA(0), new MFPacketDataPayloadRandom(payloadBuf));
+        MFPacketDataPublish data = new MFPacketDataPublish(srcGuid, dstGuid, new NA(0), new MFPacketDataPayloadRandom(payloadBuf));
 //        n1.send(na2, data);
         pub.send(na1, data);
 
