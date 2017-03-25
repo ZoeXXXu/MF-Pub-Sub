@@ -25,6 +25,10 @@ public class MFPacketGNRSPayloadQuery extends MFPacketGNRSPayload {
         this.guid = guid;
     }
 
+    public GUID getQuery() {
+        return guid;
+    }
+
     @Override
     public OutputStream serialize(OutputStream stream) throws IOException {
         super.serialize(stream);
