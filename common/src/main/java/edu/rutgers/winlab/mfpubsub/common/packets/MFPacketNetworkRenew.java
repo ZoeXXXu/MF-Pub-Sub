@@ -17,7 +17,7 @@ import java.io.PrintStream;
  */
 public class MFPacketNetworkRenew extends MFPacket {
 
-    private final static byte MF_PACKET_TYPE_NETWORK_RENEW = 9;
+    public final static byte MF_PACKET_TYPE_NETWORK_RENEW = 9;
 
     private final GUID renewedGUID;
 
@@ -38,8 +38,8 @@ public class MFPacketNetworkRenew extends MFPacket {
 
     @Override
     public PrintStream print(PrintStream ps) {
-        super.print(ps.printf("Data["));
-        renewedGUID.print(ps.printf(", tobe renewed GUID="));
+        super.print(ps.printf("Topology Renew["));
+        renewedGUID.print(ps.printf(", to be renewed GUID="));
         return newAddress.print(ps.printf(", new address"));
     }
 

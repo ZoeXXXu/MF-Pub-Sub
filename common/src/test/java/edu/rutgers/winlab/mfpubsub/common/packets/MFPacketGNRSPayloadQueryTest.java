@@ -6,39 +6,34 @@
 package edu.rutgers.winlab.mfpubsub.common.packets;
 
 import edu.rutgers.winlab.mfpubsub.common.Helper;
-import edu.rutgers.winlab.mfpubsub.common.structure.Address;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
  * @author zoe
  */
 public class MFPacketGNRSPayloadQueryTest {
-    
+
     public MFPacketGNRSPayloadQueryTest() {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
 
     @Test
     public void test() throws IOException {
-                byte[] guidBuf = new byte[GUID.GUID_LENGTH];
+        byte[] guidBuf = new byte[GUID.GUID_LENGTH];
         Helper.getRandomBytes(guidBuf, 0, GUID.GUID_LENGTH);
         GUID guid = new GUID(guidBuf);
         byte[] l1guidBuf = new byte[GUID.GUID_LENGTH];
@@ -69,5 +64,5 @@ public class MFPacketGNRSPayloadQueryTest {
         packet.print(System.out);
         System.out.println();
     }
-    
+
 }
