@@ -11,10 +11,12 @@ import edu.rutgers.winlab.mfpubsub.common.packets.MFPacket;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRS;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadAssoc;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadQuery;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadResponse;
 import edu.rutgers.winlab.mfpubsub.common.structure.Address;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -24,10 +26,13 @@ import java.util.List;
  */
 public class PacketProcessorGNRS extends PacketProcessor {
 
-    private HashMap<GUID, List<Address>> Table;
+    private final HashMap<GUID, NA> AddrTable;
+    private final HashMap<GUID, ArrayList<GUID>> GraphTable;
 
-    public PacketProcessorGNRS(NA myNA, HashMap<NA, NetworkInterface> neighbors) {
+    public PacketProcessorGNRS(HashMap<GUID, ArrayList<NA>> AddrTable, HashMap<GUID, ArrayList<GUID>> GraphTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
         super(myNA, neighbors);
+        this.AddrTable = new HashMap<>();
+        this.GraphTable = GraphTable;
     }
 
     @Override
@@ -35,7 +40,11 @@ public class PacketProcessorGNRS extends PacketProcessor {
         if (packet.getType() == MFPacketGNRS.MF_PACKET_TYPE_GNRS) {
             MFPacketGNRS pkt = (MFPacketGNRS) packet;
             if(pkt.getPayload().getType() == MFPacketGNRSPayloadQuery.MF_GNRS_PACKET_PAYLOAD_TYPE_QUERY){
-                //TODO: look up the GNRS table and send response
+                //look up the AddrTable and send response
+                NA rsp = AddrTable.get(((MFPacketGNRSPayloadQuery) pkt.getPayload()).getQuery());
+                if(rsp != null){
+                    sendToNeighbor(pkt.getSrcNa(), new MFPacketGNRS(pkt.getDstNA(), pkt.getSrcNa(), new MFPacketGNRSPayloadResponse(rsp)));
+                }
             }
             else if(pkt.getPayload().getType() == MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC){
                 //TODO: add the subscriber GUID to the mapping of topic GUID if existed
