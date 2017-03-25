@@ -12,13 +12,12 @@ import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRS;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadAssoc;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadQuery;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadResponse;
-import edu.rutgers.winlab.mfpubsub.common.structure.Address;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketNetworkRenew;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  *
@@ -48,9 +47,13 @@ public class PacketProcessorGNRS extends PacketProcessor {
             }
             else if(pkt.getPayload().getType() == MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC){
                 //TODO: add the subscriber GUID to the mapping of topic GUID if existed
+                
                 //TODO: renew the multicast tree and multicast GNRS sync
             }
-        } else {
+        } else if(packet.getType() == MFPacketNetworkRenew.MF_PACKET_TYPE_NETWORK_RENEW){
+            //TODO: renew the AddrTable
+        }
+        else {
             System.out.println("This is not the correct packet type that GNRS should receive.");
         }
     }
