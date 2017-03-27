@@ -13,6 +13,9 @@ import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketData;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPublish;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataUnicast;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRS;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayload;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadResponse;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadSync;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketNetworkRenew;
 import edu.rutgers.winlab.mfpubsub.common.structure.Address;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
@@ -31,7 +34,7 @@ public class PacketProcessorRouter extends PacketProcessor {
 
     private final HashMap<GUID, ArrayList<MFPacketData>> pendingTable;
     private final HashMap<NA, NA> routingTable;
-    private final HashMap<GUID, ArrayList<Address>> multicastTable;
+    private final HashMap<GUID, List<Address>> multicastTable;
     private final HashMap<GUID, NA> localGUIDTable;
     private final GUID GNRS_GUID;
 
@@ -61,7 +64,7 @@ public class PacketProcessorRouter extends PacketProcessor {
             MFPacketData pkt = (MFPacketData) packet;
             GUID key = pkt.getdstGuid();
             QueryGNRS(key, pkt);
-            InvokePacket(key, (NA) multicastTable.get(key).get(0));
+            InvokePacket(new MFPacketGNRSPayloadResponse(pkt.getdstGuid(), new NA(4)));
         } else if (packet.getDstNA().equals(getNa())) { // the packet is sent to myself
             if (packet.getType() == MFPacketData.MF_PACKET_TYPE_DATA) {
                 packet.print(getNa().print(System.out.printf("receive packet at ")).printf("packet = ")).println();
@@ -77,7 +80,16 @@ public class PacketProcessorRouter extends PacketProcessor {
                         System.err.println("The packet SID number is not exist.");
                 }
             } else if (packet.getType() == MFPacketGNRS.MF_PACKET_TYPE_GNRS) {
-                getNa().print(System.out.printf("GNRS packet process haven't been done, temperally skip!"));
+                switch ((((MFPacketGNRS) packet).getPayload()).getType()) {
+                    case MFPacketGNRSPayloadSync.MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC:
+                        updateMT((MFPacketGNRSPayloadSync) ((MFPacketGNRS) packet).getPayload());
+                        return;
+                    case MFPacketGNRSPayloadResponse.MF_GNRS_PACKET_PAYLOAD_TYPE_RESPONSE:
+                        InvokePacket((MFPacketGNRSPayloadResponse) ((MFPacketGNRS) packet).getPayload());
+                        return;
+                    default:
+                        System.err.println("The GNRS packet type is out of service.");
+                }
             } else if (packet.getType() == MFPacketNetworkRenew.MF_PACKET_TYPE_NETWORK_RENEW) {
                 getNa().print(System.out.printf("TODO: renew the local table"));
             } else {
@@ -86,6 +98,10 @@ public class PacketProcessorRouter extends PacketProcessor {
         } else { // i know where to forward the packet
             Routing(packet);
         }
+    }
+    
+    private void updateMT(MFPacketGNRSPayloadSync sync){
+        multicastTable.put(sync.getTopicGUID(), sync.getMulticast());
     }
 
     //this may need to be created at another class in mysql
@@ -116,7 +132,7 @@ public class PacketProcessorRouter extends PacketProcessor {
 
     public PrintStream printMulticastTable(PrintStream ps) throws IOException {
         getNa().print(ps.printf("Node NA=")).println();
-        for (Map.Entry<GUID, ArrayList<Address>> entry : multicastTable.entrySet()) {
+        for (Map.Entry<GUID, List<Address>> entry : multicastTable.entrySet()) {
             entry.getKey().print(ps).printf(" -> ");
             for (Address a : entry.getValue()) {
                 a.print(ps).printf("; ");
@@ -136,13 +152,14 @@ public class PacketProcessorRouter extends PacketProcessor {
         PTadd(dstGuid, packet);
     }
 
-    private void InvokePacket(GUID key, NA na) throws IOException {
+    private void InvokePacket(MFPacketGNRSPayloadResponse response) throws IOException {
         getNa().print(System.out.printf("")).printf("invoke the paket with dstGUID: ");
-        key.print(System.out.printf("")).println();
-        ArrayList<MFPacketData> packets = pendingTable.remove(key);
+        response.getQueriedGUID().print(System.out.printf("")).println();
+        ArrayList<MFPacketData> packets = pendingTable.remove(response.getQueriedGUID());
+        NA na = response.getNa();
         if (packets != null) {
             for (MFPacketData packet : packets) {
-                getNa().print(System.out.printf("transmist by ")).println();
+//                getNa().print(System.out.printf("transmist by ")).println();
                 Routing(new MFPacketDataPublish(packet.getsrcGuid(), packet.getdstGuid(), na, packet.getPayload()));
             }
         }
@@ -195,7 +212,7 @@ public class PacketProcessorRouter extends PacketProcessor {
     }
 
     public void MTadd(GUID topic, Address addr) {
-        ArrayList<Address> multicast = multicastTable.get(topic);
+        List<Address> multicast = multicastTable.get(topic);
         if (multicast == null) {
             multicastTable.put(topic, multicast = new ArrayList<>());
         }
