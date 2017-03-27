@@ -7,7 +7,6 @@ package edu.rutgers.winlab.tmfpubsub.endhost;
 
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterface;
 import edu.rutgers.winlab.mfpubsub.common.elements.PacketProcessor;
-import edu.rutgers.winlab.mfpubsub.common.packets.ISerializable;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacket;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketData;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketFactory;
