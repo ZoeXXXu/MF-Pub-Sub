@@ -17,7 +17,6 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -39,6 +38,7 @@ public class MFPacketGNRSPayloadSyncTest {
     /**
      * Test of createMFPacketGNRSPayloadAssociation method, of class
      * MFPacketGNRSPayloadSync.
+     * @throws java.io.IOException
      */
     @Test
     public void test() throws IOException {

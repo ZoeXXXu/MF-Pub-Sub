@@ -26,34 +26,30 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
 
     public static final byte MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC = 3;
 
-    private final GUID subscriber;
-
     private final GUID topicGUID;
 
     private final NA RP;
-    
-    private final int numofbranches;
+
+    //new 
+    private final byte add;
+
+    private final short numofsub;
+
+    private final List<GUID> subscriber;
+
+    private final short numofbranches;
 
     private final transient HashMap<NA, List<Address>> tree;
 
-//    private final int numofbranch;
-//
-//    private final int totalnumGUID;
-//
-//    private final byte[] numofGUID;
-//
-//    private final byte[] numofNA;
-//
-//    private final byte[] NAtree;
-//
-//    private final byte[] GUIDtree;
-    public MFPacketGNRSPayloadAssoc(GUID subscriber, GUID topicGUID, NA RP, HashMap<NA, List<Address>> tree) throws IOException {
+    public MFPacketGNRSPayloadAssoc(GUID topicGUID, NA RP, byte add, List<GUID> subscriber, HashMap<NA, List<Address>> tree) {
         super(MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC);
-        this.subscriber = subscriber;
         this.topicGUID = topicGUID;
         this.RP = RP;
+        this.add = add;
+        this.numofsub = (short) subscriber.size();
+        this.subscriber = subscriber;
+        this.numofbranches = (short) tree.size();
         this.tree = tree;
-        this.numofbranches = tree.size();
     }
 
     private byte[] ListToByte(HashMap<NA, List<Address>> tree) throws IOException {
@@ -77,11 +73,20 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
         return stream.toByteArray();
     }
 
+    private byte[] ListToByte(List<GUID> multicast) throws IOException {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        for (Address addr : multicast) {
+            ((GUID) addr).serialize(stream);
+        }
+        return stream.toByteArray();
+    }
+
     @Override
     public PrintStream print(PrintStream ps) {
         super.print(ps.printf("LKP["));
-        subscriber.print(ps.printf(", subscriber GUID="));
         topicGUID.print(ps.printf(", topic GUID="));
+        RP.print(ps.printf(", na="));
+
         return printTree(ps.printf("Tree:"));
     }
 
@@ -100,24 +105,28 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
     @Override
     public OutputStream serialize(OutputStream stream) throws IOException {
         super.serialize(stream);
-        subscriber.serialize(stream);
         topicGUID.serialize(stream);
         RP.serialize(stream);
-        Helper.writeInt(stream, numofbranches);
+        stream.write(add);
+        Helper.writeShort(stream, numofsub);
+        stream.write(ListToByte(subscriber));
+        Helper.writeShort(stream, numofbranches);
         stream.write(ListToByte(tree));
         return stream;
     }
 
     public static MFPacketGNRSPayload createMFPacketGNRSPayloadAssoc(byte[] buf, int[] pos) throws IOException {
-        GUID subscriber = GUID.create(buf, pos);
         GUID topic = GUID.create(buf, pos);
         NA RP = NA.create(buf, pos);
-        int numofbranch = Helper.readInt(buf, pos);
+        byte add = buf[pos[0]++];
+        short numofbranch = Helper.readShort(buf, pos);
+        ArrayList<GUID> sub = new ArrayList<>();
+        
         HashMap<NA, List<Address>> tree = new HashMap<>();
         while (numofbranch-- > 0) {
             tree.put(NA.create(buf, pos), ByteToBranch(buf, pos));
         }
-        return new MFPacketGNRSPayloadAssoc(subscriber, topic, RP, tree);
+        
     }
 
     private static List<Address> ByteToBranch(byte[] buf, int[] pos) throws IOException {
@@ -125,12 +134,15 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
         List<Address> ret = new ArrayList<>();
         while (num-- > 0) {
             byte type = buf[pos[0]++];
-            if (type == Address.MF_GNRS_PACKET_PAYLOAD_NA) {
-                ret.add(NA.create(buf, pos));
-            } else if (type == Address.MF_GNRS_PACKET_PAYLOAD_GUID) {
-                ret.add(GUID.create(buf, pos));
-            } else {
-                throw new IOException("this address is neither NA or GUID.");
+            switch (type) {
+                case Address.MF_GNRS_PACKET_PAYLOAD_NA:
+                    ret.add(NA.create(buf, pos));
+                    break;
+                case Address.MF_GNRS_PACKET_PAYLOAD_GUID:
+                    ret.add(GUID.create(buf, pos));
+                    break;
+                default:
+                    throw new IOException("this address is neither NA or GUID.");
             }
         }
         return ret;

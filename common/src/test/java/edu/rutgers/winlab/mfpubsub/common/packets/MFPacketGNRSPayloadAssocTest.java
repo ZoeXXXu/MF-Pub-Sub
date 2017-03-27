@@ -70,7 +70,7 @@ public class MFPacketGNRSPayloadAssocTest {
         tree.put(new NA(1), multicast);
 
         MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa,
-                new MFPacketGNRSPayloadAssoc(guid, guid, new NA(1), tree));
+                new MFPacketGNRSPayloadAssoc(guid, l1guid, new NA(1), tree));
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         pkt.serialize(baos);
@@ -86,6 +86,7 @@ public class MFPacketGNRSPayloadAssocTest {
 //        System.out.println("GUID list: " + ((MFPacketGNRSPayloadSync)((MFPacketGNRS)packet).getPayload()).getGUIDs());
         System.out.println();
 
+        
     }
 
 }

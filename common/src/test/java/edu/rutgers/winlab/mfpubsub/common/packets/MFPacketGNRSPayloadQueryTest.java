@@ -50,8 +50,8 @@ public class MFPacketGNRSPayloadQueryTest {
         NA dstNa = new NA(Helper.getRandomInt());
         dstNa.print(System.out.printf("dstNa=")).println();
 
-//        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa, new MFPacketGNRSPayloadQuery(guid));
-        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa, new MFPacketGNRSPayloadResponse(guid, new NA(4)));
+        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa, new MFPacketGNRSPayloadQuery(guid));
+//        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa, new MFPacketGNRSPayloadResponse(guid, new NA(4)));
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         pkt.serialize(baos);
