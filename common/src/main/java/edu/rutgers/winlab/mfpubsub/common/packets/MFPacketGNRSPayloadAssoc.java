@@ -31,6 +31,8 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
     private final GUID topicGUID;
 
     private final NA RP;
+    
+    private final int numofbranches;
 
     private final transient HashMap<NA, List<Address>> tree;
 
@@ -51,6 +53,7 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
         this.topicGUID = topicGUID;
         this.RP = RP;
         this.tree = tree;
+        this.numofbranches = tree.size();
     }
 
     private byte[] ListToByte(HashMap<NA, List<Address>> tree) throws IOException {
@@ -99,9 +102,8 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
         super.serialize(stream);
         subscriber.serialize(stream);
         topicGUID.serialize(stream);
-//        stream.write((byte) 1);
-//        stream.write(MF_GNRS_PACKET_PAYLOAD_NA);
         RP.serialize(stream);
+        Helper.writeInt(stream, numofbranches);
         stream.write(ListToByte(tree));
         return stream;
     }
@@ -110,8 +112,9 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
         GUID subscriber = GUID.create(buf, pos);
         GUID topic = GUID.create(buf, pos);
         NA RP = NA.create(buf, pos);
+        int numofbranch = Helper.readInt(buf, pos);
         HashMap<NA, List<Address>> tree = new HashMap<>();
-        while (pos[0] < buf.length) {
+        while (numofbranch-- > 0) {
             tree.put(NA.create(buf, pos), ByteToBranch(buf, pos));
         }
         return new MFPacketGNRSPayloadAssoc(subscriber, topic, RP, tree);
