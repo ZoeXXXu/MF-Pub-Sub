@@ -30,6 +30,7 @@ import java.util.Map;
 public class PacketProcessorGNRS extends PacketProcessor {
 
     private final HashMap<GUID, NA> AddrTable;
+    //should be stored in computation nodoe
     private final HashMap<GUID, ArrayList<GUID>> GraphTable;
 
     public PacketProcessorGNRS(HashMap<GUID, ArrayList<GUID>> GraphTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
