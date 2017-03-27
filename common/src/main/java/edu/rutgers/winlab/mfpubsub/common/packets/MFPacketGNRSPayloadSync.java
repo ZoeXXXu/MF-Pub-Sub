@@ -94,4 +94,12 @@ public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
         stream.write(ListToByte(multicast));
         return stream;
     }
+
+    public GUID getTopicGUID() {
+        return topicGUID;
+    }
+
+    public List<Address> getMulticast() {
+        return multicast;
+    }
 }
