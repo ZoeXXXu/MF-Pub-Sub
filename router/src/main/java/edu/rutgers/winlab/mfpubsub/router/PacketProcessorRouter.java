@@ -13,6 +13,7 @@ import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketData;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPublish;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataUnicast;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRS;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketNetworkRenew;
 import edu.rutgers.winlab.mfpubsub.common.structure.Address;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.io.IOException;
@@ -77,6 +78,8 @@ public class PacketProcessorRouter extends PacketProcessor {
                 }
             } else if (packet.getType() == MFPacketGNRS.MF_PACKET_TYPE_GNRS) {
                 getNa().print(System.out.printf("GNRS packet process haven't been done, temperally skip!"));
+            } else if (packet.getType() == MFPacketNetworkRenew.MF_PACKET_TYPE_NETWORK_RENEW) {
+                getNa().print(System.out.printf("TODO: renew the local table"));
             } else {
                 getNa().print(System.out.printf("PacketProcessorRouter.handlePacket(): shouldn't have such types."));
             }
@@ -152,18 +155,20 @@ public class PacketProcessorRouter extends PacketProcessor {
 
     private void PublishToMulticastGroup(MFPacketData packet) throws IOException {
         List<Address> multicast = (List<Address>) multicastTable.get(packet.getdstGuid());
-        if (multicast == null) {
-            throw new IOException(String.format("no GUID %s exist in NA %s", packet.getdstGuid(), getNa().getVal()));
-        }
-        for (Address address : multicast) {
-            if (address instanceof GUID) {
-                SendToGUID(packet, (GUID) address);
-            } else if (address instanceof NA) {
-                NA na = (NA) address;
-                RenewNAandSend(packet, na);
-            } else {
-                System.out.println("Something wrong this multicast table ");
+        if (multicast != null) {
+            for (Address address : multicast) {
+                if (address instanceof GUID) {
+                    SendToGUID(packet, (GUID) address);
+                } else if (address instanceof NA) {
+                    NA na = (NA) address;
+                    RenewNAandSend(packet, na);
+                } else {
+                    System.out.println("Something wrong this multicast table ");
+                }
             }
+        } else {
+            //Or just print the notification?
+            throw new IOException(String.format("no GUID %s exist in NA %s", packet.getdstGuid(), getNa().getVal()));
         }
     }
 
