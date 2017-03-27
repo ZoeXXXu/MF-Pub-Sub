@@ -32,9 +32,15 @@ public class PacketProcessorGNRS extends PacketProcessor {
     private final HashMap<GUID, NA> AddrTable;
     private final HashMap<GUID, ArrayList<GUID>> GraphTable;
 
-    public PacketProcessorGNRS(HashMap<GUID, ArrayList<NA>> AddrTable, HashMap<GUID, ArrayList<GUID>> GraphTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
+    public PacketProcessorGNRS(HashMap<GUID, ArrayList<GUID>> GraphTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
         super(myNA, neighbors);
         this.AddrTable = new HashMap<>();
+        this.GraphTable = GraphTable;
+    }
+
+    public PacketProcessorGNRS(HashMap<GUID, NA> AddrTable, HashMap<GUID, ArrayList<GUID>> GraphTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
+        super(myNA, neighbors);
+        this.AddrTable = AddrTable;
         this.GraphTable = GraphTable;
     }
 
@@ -59,7 +65,7 @@ public class PacketProcessorGNRS extends PacketProcessor {
     private void response(MFPacketGNRS query) throws IOException {
         NA rsp = AddrTable.get(((MFPacketGNRSPayloadQuery) query.getPayload()).getQuery());
         if (rsp != null) {
-            sendToNeighbor(query.getSrcNa(), new MFPacketGNRS(query.getDstNA(), query.getSrcNa(), new MFPacketGNRSPayloadResponse(rsp)));
+            sendToNeighbor(query.getSrcNa(), new MFPacketGNRS(query.getDstNA(), query.getSrcNa(), new MFPacketGNRSPayloadResponse(((MFPacketGNRSPayloadQuery) query.getPayload()).getQuery(), rsp)));
         }
     }
 
@@ -67,7 +73,7 @@ public class PacketProcessorGNRS extends PacketProcessor {
         GraphAdd(assoc.getTopicGUID(), assoc.getSubscriber());
         AddrTable.put(assoc.getTopicGUID(), assoc.getRP());
         HashMap<NA, List<Address>> tree = assoc.getTree();
-        for(Map.Entry<NA, List<Address>> entry : tree.entrySet()){
+        for (Map.Entry<NA, List<Address>> entry : tree.entrySet()) {
             sendToNeighbor(entry.getKey(), new MFPacketGNRS(getNa(), entry.getKey(), new MFPacketGNRSPayloadSync(assoc.getTopicGUID(), entry.getValue())));
         }
     }
