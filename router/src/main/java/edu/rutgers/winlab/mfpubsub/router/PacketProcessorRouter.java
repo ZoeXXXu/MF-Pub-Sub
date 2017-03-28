@@ -13,7 +13,6 @@ import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketData;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPublish;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataUnicast;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRS;
-import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayload;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadResponse;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadSync;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketNetworkRenew;
@@ -66,41 +65,41 @@ public class PacketProcessorRouter extends PacketProcessor {
             QueryGNRS(key, pkt);
             InvokePacket(new MFPacketGNRSPayloadResponse(pkt.getdstGuid(), new NA(4)));
         } else if (packet.getDstNA().equals(getNa())) { // the packet is sent to myself
-            if (packet.getType() == MFPacketData.MF_PACKET_TYPE_DATA) {
-                packet.print(getNa().print(System.out.printf("receive packet at ")).printf("packet = ")).println();
-                MFPacketData pkt = (MFPacketData) packet;
-                switch (pkt.getSID()) {//TODO: if it is unicast, send by looking up LT; if it is publish: send by looking up MT
-                    case MFPacketDataPublish.MF_PACKET_DATA_SID_PUBLISH:
-                        PublishToMulticastGroup(pkt);
-                        return;
-                    case MFPacketDataUnicast.MF_PACKET_DATA_SID_UNICAST:
-                        SendToGUID(pkt, pkt.getdstGuid());
-                        return;
-                    default:
-                        System.err.println("The packet SID number is not exist.");
-                }
-            } else if (packet.getType() == MFPacketGNRS.MF_PACKET_TYPE_GNRS) {
-                switch ((((MFPacketGNRS) packet).getPayload()).getType()) {
-                    case MFPacketGNRSPayloadSync.MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC:
-                        updateMT((MFPacketGNRSPayloadSync) ((MFPacketGNRS) packet).getPayload());
-                        return;
-                    case MFPacketGNRSPayloadResponse.MF_GNRS_PACKET_PAYLOAD_TYPE_RESPONSE:
-                        InvokePacket((MFPacketGNRSPayloadResponse) ((MFPacketGNRS) packet).getPayload());
-                        return;
-                    default:
-                        System.err.println("The GNRS packet type is out of service.");
-                }
-            } else if (packet.getType() == MFPacketNetworkRenew.MF_PACKET_TYPE_NETWORK_RENEW) {
-                getNa().print(System.out.printf("TODO: renew the local table"));
-            } else {
-                getNa().print(System.out.printf("PacketProcessorRouter.handlePacket(): shouldn't have such types."));
+            switch (packet.getType()) {
+                case MFPacketData.MF_PACKET_TYPE_DATA:
+                    packet.print(getNa().print(System.out.printf("receive packet at ")).printf("packet = ")).println();
+                    MFPacketData pkt = (MFPacketData) packet;
+                    switch (pkt.getSID()) {//TODO: if it is unicast, send by looking up LT; if it is publish: send by looking up MT
+                        case MFPacketDataPublish.MF_PACKET_DATA_SID_PUBLISH:
+                            PublishToMulticastGroup(pkt);
+                            break;
+                        case MFPacketDataUnicast.MF_PACKET_DATA_SID_UNICAST:
+                            SendToGUID(pkt, pkt.getdstGuid());
+                            break;
+                        default:
+                            System.err.println("The packet SID number is not exist.");
+                    }
+                    break;
+                case MFPacketGNRS.MF_PACKET_TYPE_GNRS:
+                    switch ((((MFPacketGNRS) packet).getPayload()).getType()) {
+                        case MFPacketGNRSPayloadSync.MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC:
+                            updateMT((MFPacketGNRSPayloadSync) ((MFPacketGNRS) packet).getPayload());
+                            break;
+                        case MFPacketGNRSPayloadResponse.MF_GNRS_PACKET_PAYLOAD_TYPE_RESPONSE:
+                            InvokePacket((MFPacketGNRSPayloadResponse) ((MFPacketGNRS) packet).getPayload());
+                            break;
+                        default:
+                            System.err.println("The GNRS packet type is out of service.");
+                    }
+                default:
+                    System.err.println("PacketProcessorRouter.handlePacket(): shouldn't have such types.");
             }
         } else { // i know where to forward the packet
             Routing(packet);
         }
     }
-    
-    private void updateMT(MFPacketGNRSPayloadSync sync){
+
+    private void updateMT(MFPacketGNRSPayloadSync sync) {
         multicastTable.put(sync.getTopicGUID(), sync.getMulticast());
     }
 
@@ -159,14 +158,13 @@ public class PacketProcessorRouter extends PacketProcessor {
         NA na = response.getNa();
         if (packets != null) {
             for (MFPacketData packet : packets) {
-//                getNa().print(System.out.printf("transmist by ")).println();
                 Routing(new MFPacketDataPublish(packet.getsrcGuid(), packet.getdstGuid(), na, packet.getPayload()));
             }
         }
     }
 
     private void RenewNAandSend(MFPacketData packet, NA na) throws IOException {
-        getNa().print(System.out.printf("transmist by ")).println();
+//        getNa().print(System.out.printf("transmist by ")).println();
         Routing(new MFPacketDataPublish(packet.getsrcGuid(), packet.getdstGuid(), na, packet.getPayload()));
     }
 

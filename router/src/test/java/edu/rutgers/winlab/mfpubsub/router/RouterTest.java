@@ -7,10 +7,9 @@ package edu.rutgers.winlab.mfpubsub.router;
 
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterface;
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterfaceUDP;
-import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
-import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketData;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPayloadRandom;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPublish;
+import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -90,7 +89,7 @@ public class RouterTest {
 //        GUID srcGuid = new GUID(srcGuidBuf);
         byte[] dstGuidBuf = new byte[GUID.GUID_LENGTH];
         dstGuidBuf[GUID.GUID_LENGTH - 1] = 0x2;
-        GUID dstGuid = new GUID(dstGuidBuf);
+        GUID topicGuid = new GUID(dstGuidBuf);
         byte[] GnrsGuidBuf = new byte[GUID.GUID_LENGTH];
         GnrsGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0xffff;
         GUID gnrs = new GUID(GnrsGuidBuf);
@@ -101,12 +100,15 @@ public class RouterTest {
         byte[] user2GuidBuf = new byte[GUID.GUID_LENGTH];
         user2GuidBuf[GUID.GUID_LENGTH - 1] = 0x4;
         GUID user2Guid = new GUID(user2GuidBuf);
+        byte[] pubGuidBuf = new byte[GUID.GUID_LENGTH];
+        pubGuidBuf[GUID.GUID_LENGTH - 1] = 0x5;
+        GUID pubGuid = new GUID(pubGuidBuf);
 
         byte[] payloadBuf = new byte[30];
         for (int i = 0; i < payloadBuf.length; i++) {
             payloadBuf[i] = (byte) (i & 0xFF);
         }
-
+        
         //router 1
         HashMap<NA, NetworkInterface> neighbor1 = new HashMap<>();
         HashMap<NA, NA> routingt1 = new HashMap<>();
@@ -119,7 +121,7 @@ public class RouterTest {
         routingt1.put(na6, na2);
 //        multi1.addBranch(dstGuid, na4);
         PacketProcessorRouter n1 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), routingt1, na1, neighbor1);
-        n1.MTadd(dstGuid, na4);
+        n1.MTadd(topicGuid, na4);
         n1.print(System.out.printf("n1:")).println();
         n1.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         n1.printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
@@ -171,7 +173,7 @@ public class RouterTest {
         routingt4.put(na6, na6);
 //        multi4.addBranch(dstGuid, na6);
         PacketProcessorRouter n4 = new PacketProcessorRouter(gnrs, new HashMap<GUID, NA>(), routingt4, na4, neighbor4);
-        n4.MTadd(dstGuid, na6);
+        n4.MTadd(topicGuid, na6);
         n4.print(System.out.printf("n4:")).println();
         n4.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         n4.printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
@@ -210,15 +212,16 @@ public class RouterTest {
 //        multi6.addBranch(dstGuid, user1Guid);
 //        multi6.addBranch(dstGuid, user2Guid);
         PacketProcessorRouter n6 = new PacketProcessorRouter(gnrs, localGT6, routingt6, na6, neighbor6);
-        n6.MTadd(dstGuid, user1Guid);
-        n6.MTadd(dstGuid, user2Guid);
+        n6.MTadd(topicGuid, user1Guid);
+        n6.MTadd(topicGuid, user2Guid);
         n6.print(System.out.printf("n6:")).println();
         n6.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         n6.printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
         n6.printMulticastTable(System.out.printf("===Multicast===%n")).printf("==ENDInterface===%n");
 //        multi6.print(System.out.printf("===Multicast created===%n")).printf("==ENDInterface===%n");
         n6.start();
-
+//        MFPacketDataPublish data = new MFPacketDataPublish(pubGuid, topicGuid, new NA(0), new MFPacketDataPayloadRandom(payloadBuf));
+//        pub.send(na1, data);
         Thread.sleep(10000);
         System.out.println("Stopping...");
         n1.stop();
