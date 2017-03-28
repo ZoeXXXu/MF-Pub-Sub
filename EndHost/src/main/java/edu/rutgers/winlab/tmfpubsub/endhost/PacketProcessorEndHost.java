@@ -35,7 +35,7 @@ public class PacketProcessorEndHost extends PacketProcessor {
     public PrintStream print(PrintStream ps) throws IOException {
         return super.print(ps.printf("\nRouter")).printf("\n");
     }
-    
+
     public void send(NA neighbor, MFPacket packet) throws IOException {
         packet.print(System.out.printf("")).println();
         sendToNeighbor(neighbor, packet);
@@ -44,22 +44,19 @@ public class PacketProcessorEndHost extends PacketProcessor {
     @Override
     protected void handlePacket(MFPacket packet) throws IOException {
         getNa().print(System.out.printf("NA ")).println("receive packet");
-        if (packet.getType() == MFPacketData.MF_PACKET_TYPE_DATA) {
-            ((MFPacketData) packet).getsrcGuid().print(System.out.printf("receive from the publisher ")).println();
-            try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-                ((MFPacketData) packet).getPayload().serialize(stream);
-                MFPacket pkt = MFPacketFactory.createPacket(stream.toByteArray(), new int[]{0});
-                if (pkt instanceof MFPacketData) {
-                    MFPacketData pktD = (MFPacketData) pkt;
-                    pktD.getPayload().print(System.out.printf("receive an published content: ")).println();
-                    pktD.getsrcGuid().print(System.out.printf(" from the publisher ")).println();
-                } else {
-                    getNa().print(System.err.printf("The end host should not receive the GNRS message. Please check the logic.")).println();
+//        ((MFPacketData) packet).getsrcGuid().print(System.out.printf("receive from the publisher ")).println();
+        switch (packet.getType()) {
+            case MFPacketData.MF_PACKET_TYPE_DATA:
+                try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
+                    ((MFPacketData) packet).getPayload().serialize(stream);
+                    MFPacket pkt = MFPacketFactory.createPacket(stream.toByteArray(), new int[]{0});
+                    pkt.print(System.out).println();
                 }
-            }
-        } else if (packet.getType() == MFPacketGNRS.MF_PACKET_TYPE_GNRS) {
-            getNa().print(System.err.printf("The end host should not receive the GNRS message. Please check the logic.")).println();
+                break;
+            case MFPacketGNRS.MF_PACKET_TYPE_GNRS:
+                getNa().print(System.err.printf("The end host should not receive the GNRS message. Please check the logic.")).println();
+            default:
+                System.err.println("not a correct packet type");
         }
     }
-
 }

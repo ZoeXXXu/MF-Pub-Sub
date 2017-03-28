@@ -16,7 +16,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.HashMap;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -76,12 +75,12 @@ public class PacketProcessorEndHostTest {
         pub.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         pub.start();
 
-        HashMap<NA, NetworkInterface> connectedRouter1 = new HashMap<>();
-        connectedRouter1.put(na6, new NetworkInterfaceUDP(l12, l11));
-        PacketProcessorEndHost sub1 = new PacketProcessorEndHost(user1Guid, na7, connectedRouter1);
-        sub1.print(System.out.printf("user 1:")).println();
-        sub1.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
-        sub1.start();
+//        HashMap<NA, NetworkInterface> connectedRouter1 = new HashMap<>();
+//        connectedRouter1.put(na6, new NetworkInterfaceUDP(l12, l11));
+//        PacketProcessorEndHost sub1 = new PacketProcessorEndHost(user1Guid, na7, connectedRouter1);
+//        sub1.print(System.out.printf("user 1:")).println();
+//        sub1.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
+//        sub1.start();
 
         HashMap<NA, NetworkInterface> connectedRouter2 = new HashMap<>();
         connectedRouter2.put(na6, new NetworkInterfaceUDP(l14, l13));
@@ -91,13 +90,12 @@ public class PacketProcessorEndHostTest {
         sub2.start();
 
         MFPacketDataPublish data = new MFPacketDataPublish(pubGuid, topicGuid, new NA(0), new MFPacketDataPayloadRandom(payloadBuf));
-//        n1.send(na2, data);
         pub.send(na1, data);
 
         Thread.sleep(10000);
         System.out.println("Stopping...");
         pub.stop();
-        sub1.stop();
+//        sub1.stop();
         sub2.stop();
     }
 
