@@ -13,7 +13,6 @@ import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadAssoc;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadQuery;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadResponse;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadSync;
-import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketNetworkRenew;
 import edu.rutgers.winlab.mfpubsub.common.structure.Address;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
@@ -33,11 +32,11 @@ public class PacketProcessorGNRS extends PacketProcessor {
     //should be stored in computation nodoe
     private final HashMap<GUID, ArrayList<GUID>> GraphTable;
 
-    public PacketProcessorGNRS(HashMap<GUID, ArrayList<GUID>> GraphTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
-        super(myNA, neighbors);
-        this.AddrTable = new HashMap<>();
-        this.GraphTable = GraphTable;
-    }
+//    public PacketProcessorGNRS(HashMap<GUID, ArrayList<GUID>> GraphTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
+//        super(myNA, neighbors);
+//        this.AddrTable = new HashMap<>();
+//        this.GraphTable = GraphTable;
+//    }
 
     public PacketProcessorGNRS(HashMap<GUID, NA> AddrTable, HashMap<GUID, ArrayList<GUID>> GraphTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
         super(myNA, neighbors);
@@ -49,15 +48,14 @@ public class PacketProcessorGNRS extends PacketProcessor {
     protected void handlePacket(MFPacket packet) throws IOException {
         if (packet.getType() == MFPacketGNRS.MF_PACKET_TYPE_GNRS) {
             MFPacketGNRS pkt = (MFPacketGNRS) packet;
-            if (pkt.getPayload().getType() == MFPacketGNRSPayloadQuery.MF_GNRS_PACKET_PAYLOAD_TYPE_QUERY) {
-                response(pkt);
-            } else if (pkt.getPayload().getType() == MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC) {
-                //TODO: add the subscriber GUID to the mapping of topic GUID in GraohTable if existed
-                //TODO: renew the multicast tree and multicast GNRS sync
-                renewMulticast((MFPacketGNRSPayloadAssoc) pkt.getPayload());
+            switch (pkt.getPayload().getType()) {
+                case MFPacketGNRSPayloadQuery.MF_GNRS_PACKET_PAYLOAD_TYPE_QUERY:
+                    response(pkt);
+                case MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC:
+                    renewMulticast((MFPacketGNRSPayloadAssoc) pkt.getPayload());
+                default:
+                    System.err.println("receive a wrong packet type which shouldn't receive actually.");
             }
-        } else if (packet.getType() == MFPacketNetworkRenew.MF_PACKET_TYPE_NETWORK_RENEW) {
-            System.out.println("TODO: renew the AddrTable");
         } else {
             System.out.println("This is not the correct packet type that GNRS should receive.");
         }
@@ -66,12 +64,41 @@ public class PacketProcessorGNRS extends PacketProcessor {
     private void response(MFPacketGNRS query) throws IOException {
         NA rsp = AddrTable.get(((MFPacketGNRSPayloadQuery) query.getPayload()).getQuery());
         if (rsp != null) {
-            sendToNeighbor(query.getSrcNa(), new MFPacketGNRS(query.getDstNA(), query.getSrcNa(), new MFPacketGNRSPayloadResponse(((MFPacketGNRSPayloadQuery) query.getPayload()).getQuery(), rsp)));
+            sendToNeighbor(new NA(3), new MFPacketGNRS(query.getDstNA(), query.getSrcNa(), new MFPacketGNRSPayloadResponse(((MFPacketGNRSPayloadQuery) query.getPayload()).getQuery(), rsp)));
         }
     }
 
     private void renewMulticast(MFPacketGNRSPayloadAssoc assoc) throws IOException {
-        GraphAdd(assoc.getTopicGUID(), assoc.getSubscriber());
+        if (assoc.getNumofbranches() != 0) {//pubsub-assoc msg
+            switch (assoc.getAdd()) {
+                case MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB:
+                    SubTrees(assoc);
+                    break;
+                case MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_UNSUB:
+                    UnsubTree(assoc);
+                    break;
+                default:
+                    System.err.println("do not know what this packet want to do, sub or unsub?");
+            }
+        } else {//the normal GNRS update msg
+            AddrTable.put(assoc.getTopicGUID(), assoc.getRP());
+        }
+    }
+
+    private void GraphAdd(GUID key, List<GUID> value) {
+        ArrayList<GUID> tmp = GraphTable.get(key);
+        if (tmp == null) {
+            GraphTable.put(key, tmp = new ArrayList<>());
+        }
+        for (GUID guid : value) {
+            tmp.add(guid);
+        }
+    }
+
+    private void SubTrees(MFPacketGNRSPayloadAssoc assoc) throws IOException {
+        if (assoc.getNumofsub() != 0) {
+            GraphAdd(assoc.getTopicGUID(), assoc.getSubscriber());
+        }
         AddrTable.put(assoc.getTopicGUID(), assoc.getRP());
         HashMap<NA, List<Address>> tree = assoc.getTree();
         for (Map.Entry<NA, List<Address>> entry : tree.entrySet()) {
@@ -79,12 +106,23 @@ public class PacketProcessorGNRS extends PacketProcessor {
         }
     }
 
-    private void GraphAdd(GUID key, GUID value) {
-        ArrayList<GUID> tmp = GraphTable.get(key);
-        if (tmp == null) {
-            GraphTable.put(key, tmp = new ArrayList<>());
+    private void UnsubTree(MFPacketGNRSPayloadAssoc assoc) throws IOException {
+        if (assoc.getNumofsub() != 0) {
+            GraphDelete(assoc.getTopicGUID(), assoc.getSubscriber());
         }
-        tmp.add(value);
+        AddrTable.put(assoc.getTopicGUID(), assoc.getRP());
+        HashMap<NA, List<Address>> tree = assoc.getTree();
+        for (Map.Entry<NA, List<Address>> entry : tree.entrySet()) {
+            sendToNeighbor(entry.getKey(), new MFPacketGNRS(getNa(), entry.getKey(), new MFPacketGNRSPayloadSync(assoc.getTopicGUID(), entry.getValue())));
+        }
     }
 
+    private void GraphDelete(GUID key, List<GUID> value) {
+        ArrayList<GUID> tmp = GraphTable.get(key);
+        if (tmp != null) {
+            for (GUID guid : value) {
+                tmp.remove(guid);
+            }
+        }
+    }
 }
