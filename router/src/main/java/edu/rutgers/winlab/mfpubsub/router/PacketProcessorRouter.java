@@ -13,6 +13,7 @@ import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketData;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPublish;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataUnicast;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRS;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadQuery;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadResponse;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadSync;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketNetworkRenew;
@@ -35,15 +36,15 @@ public class PacketProcessorRouter extends PacketProcessor {
     private final HashMap<NA, NA> routingTable;
     private final HashMap<GUID, List<Address>> multicastTable;
     private final HashMap<GUID, NA> localGUIDTable;
-    private final GUID GNRS_GUID;
+    private final NA GNRS_NA;
 
-    public PacketProcessorRouter(GUID GNRS, HashMap<GUID, NA> localGUIDTable, HashMap<NA, NA> RoutingTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
+    public PacketProcessorRouter(NA GNRS, HashMap<GUID, NA> localGUIDTable, HashMap<NA, NA> RoutingTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
         super(myNA, neighbors);
         this.multicastTable = new HashMap<>();
         this.pendingTable = new HashMap<>();
         this.routingTable = RoutingTable;
         this.localGUIDTable = localGUIDTable;
-        this.GNRS_GUID = GNRS;
+        this.GNRS_NA = GNRS;
     }
 
     @Override
@@ -63,7 +64,7 @@ public class PacketProcessorRouter extends PacketProcessor {
             MFPacketData pkt = (MFPacketData) packet;
             GUID key = pkt.getdstGuid();
             QueryGNRS(key, pkt);
-            InvokePacket(new MFPacketGNRSPayloadResponse(pkt.getdstGuid(), new NA(4)));
+//            InvokePacket(new MFPacketGNRSPayloadResponse(pkt.getdstGuid(), new NA(4)));
         } else if (packet.getDstNA().equals(getNa())) { // the packet is sent to myself
             switch (packet.getType()) {
                 case MFPacketData.MF_PACKET_TYPE_DATA:
@@ -107,7 +108,7 @@ public class PacketProcessorRouter extends PacketProcessor {
     private void Routing(MFPacket packet) throws IOException {
         NA i = routingTable.get(packet.getDstNA());
         if (i == null) {
-            throw new IOException(String.format("Cannot find next hop: %s on %s", packet.getDstNA(), this));
+            throw new IOException(String.format("Cannot find next hop: %s on %s", packet.getDstNA().getVal(), getNa().getVal()));
         }
         getNa().print(System.out.printf("transmist by ")).println();
         sendToNeighbor(i, packet);
@@ -146,8 +147,9 @@ public class PacketProcessorRouter extends PacketProcessor {
      * @param dstGuid
      * @param packet
      */
-    private void QueryGNRS(GUID dstGuid, MFPacketData packet) {
-        getNa().print(System.out.printf("TODO: query GNRS with provided GUID: ")).println();
+    private void QueryGNRS(GUID dstGuid, MFPacketData packet) throws IOException {
+        getNa().print(System.out.printf("query GNRS with provided GUID: ")).println();
+        Routing(new MFPacketGNRS(getNa(), GNRS_NA, new MFPacketGNRSPayloadQuery(dstGuid)));
         PTadd(dstGuid, packet);
     }
 
