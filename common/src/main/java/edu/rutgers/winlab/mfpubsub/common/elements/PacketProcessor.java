@@ -92,7 +92,7 @@ public abstract class PacketProcessor {
     protected void sendToNeighbor(NA neighbor, MFPacket packet) throws IOException {
         NetworkInterface i = neighbors.get(neighbor);
         if (i == null) {
-            throw new IOException(String.format("Cannot find neighbor: %s on %s", neighbor, this));
+            throw new IOException(String.format("Cannot find neighbor: %s on %s", neighbor.getVal(), getNa().getVal()));
         }
         i.send(packet);
     }
