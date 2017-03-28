@@ -25,6 +25,10 @@ import java.util.Map;
 public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
 
     public static final byte MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC = 3;
+    
+    public static final transient byte MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB = 0;
+    
+    public static final transient byte MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_UNSUB = 1;
 
     private final GUID topicGUID;
 
@@ -119,14 +123,17 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
         GUID topic = GUID.create(buf, pos);
         NA RP = NA.create(buf, pos);
         byte add = buf[pos[0]++];
-        short numofbranch = Helper.readShort(buf, pos);
+        short numofsub = Helper.readShort(buf, pos);
         ArrayList<GUID> sub = new ArrayList<>();
-        
+        while (numofsub-- > 0) {
+            sub.add(GUID.create(buf, pos));
+        }
+        short numofbranch = Helper.readShort(buf, pos);
         HashMap<NA, List<Address>> tree = new HashMap<>();
         while (numofbranch-- > 0) {
             tree.put(NA.create(buf, pos), ByteToBranch(buf, pos));
         }
-        
+        return new MFPacketGNRSPayloadAssoc(topic, RP, add, sub, tree);
     }
 
     private static List<Address> ByteToBranch(byte[] buf, int[] pos) throws IOException {
@@ -156,11 +163,23 @@ public class MFPacketGNRSPayloadAssoc extends MFPacketGNRSPayload {
         return RP;
     }
 
-    public GUID getSubscriber() {
+    public List<GUID> getSubscriber() {
         return subscriber;
+    }
+
+    public byte getAdd() {
+        return add;
     }
 
     public GUID getTopicGUID() {
         return topicGUID;
+    }
+
+    public short getNumofbranches() {
+        return numofbranches;
+    }
+
+    public short getNumofsub() {
+        return numofsub;
     }
 }

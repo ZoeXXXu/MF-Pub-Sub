@@ -5,6 +5,7 @@
  */
 package edu.rutgers.winlab.mfpubsub.common.packets;
 
+import edu.rutgers.winlab.mfpubsub.common.Helper;
 import edu.rutgers.winlab.mfpubsub.common.structure.Address;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
@@ -25,6 +26,8 @@ public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
     public static final byte MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC = 2;
 
     private final GUID topicGUID;
+    
+    private final short numofAddr;
 
     private final transient List<Address> multicast;
 
@@ -32,6 +35,7 @@ public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
         super(MF_GNRS_PACKET_PAYLOAD_TYPE_SYNC);
         this.topicGUID = topicGUID;
         this.multicast = multicast;
+        this.numofAddr = (short) multicast.size();
     }
 
     private byte[] ListToByte(List<Address> multicast) throws IOException {
@@ -53,7 +57,8 @@ public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
     public static MFPacketGNRSPayload createMFPacketGNRSPayloadAssociation(byte[] buf, int[] pos) throws IOException {
         GUID topicGUID = GUID.create(buf, pos);
         ArrayList<Address> multicast = new ArrayList<>();
-        while (pos[0] < buf.length) {
+        short numofaddr = Helper.readShort(buf, pos);
+        while (numofaddr-- > 0) {
             multicast.add(ByteToAddress(buf, pos));
         }
         return new MFPacketGNRSPayloadSync(topicGUID, multicast);
@@ -72,8 +77,7 @@ public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
     }
 
     @Override
-    public PrintStream print(PrintStream ps
-    ) {
+    public PrintStream print(PrintStream ps) {
         super.print(ps.printf("LKP["));
         topicGUID.print(ps.printf(", topic GUID="));
         return printMulticast(ps.printf("multicast address:"));
@@ -90,6 +94,7 @@ public class MFPacketGNRSPayloadSync extends MFPacketGNRSPayload {
     public OutputStream serialize(OutputStream stream) throws IOException {
         super.serialize(stream);
         topicGUID.serialize(stream);
+        Helper.writeShort(stream, numofAddr);
         stream.write(ListToByte(multicast));
         return stream;
     }
