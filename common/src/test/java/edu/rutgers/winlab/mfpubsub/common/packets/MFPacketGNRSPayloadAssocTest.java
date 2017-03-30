@@ -61,10 +61,11 @@ public class MFPacketGNRSPayloadAssocTest {
         ArrayList<GUID> subs = new ArrayList<>();
         ArrayList<Address> multicast = new ArrayList<>();
         ArrayList<Address> multicast2 = new ArrayList<>();
+        int val = 2;
 
-        multicast2.add(new NA(4));
+        multicast2.add(new NA(val++));
         multicast2.add(l1guid);
-        tree.put(new NA(2), multicast2);
+        tree.put(new NA(val++), multicast2);
 
         multicast.add(new NA(2));
         multicast.add(new NA(3));
