@@ -29,10 +29,6 @@ public class PacketProcessorEndHostTest {
     @Test
     public void test() throws IOException, InterruptedException {
         NA na1 = new NA(1);
-        NA na2 = new NA(2);
-        NA na3 = new NA(3);
-        NA na4 = new NA(4);
-        NA na5 = new NA(5);
         NA na6 = new NA(6);
 
         NA na7 = new NA(7);
