@@ -19,14 +19,14 @@ public class Vertice {
     private int weight;
 
     public Vertice(NA self) {
-        this.prev = null;
+        this.prev = self;
 //        this.next = null;
         this.self = self;
         this.weight = Integer.MAX_VALUE;
     }
 
     public Vertice(NA self, int weight) {
-        this.prev = null;
+        this.prev = self;
 //        this.next = null;
         this.self = self;
         this.weight = weight;
