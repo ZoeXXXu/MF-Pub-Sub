@@ -11,6 +11,7 @@ import edu.rutgers.winlab.mfpubsub.common.structure.Vertice;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -93,13 +94,14 @@ public class DijkstraTree {
 //
 //        return ret;
 //    }
-
     private void treeAdd(HashMap<NA, ArrayList<NA>> tree, NA key, NA value) {
-        ArrayList tmp = tree.get(key);
+        ArrayList<NA> tmp = tree.get(key);
         if (tmp == null) {
             tree.put(key, tmp = new ArrayList<>());
         }
-        tmp.add(value);
+        if (!tmp.contains(value)) {
+            tmp.add(value);
+        }
     }
 
     private void printDjik() {
@@ -112,26 +114,25 @@ public class DijkstraTree {
             }
         }
     }
-    
+
     //need a translator to change the ArrayList<GUID>(subscribers) to ArrayList<NA>(connected edge routers)
     //Then add guid at the list<Address> of NA at the mapping of each NA of receivers
-    public HashMap<NA, ArrayList<NA>> getTree(NA RP, ArrayList<NA> receivers){
+    public HashMap<NA, ArrayList<NA>> getTree(NA RP, ArrayList<NA> receivers) {
         HashMap<NA, ArrayList<NA>> ret = new HashMap<>();
         ArrayList<NA> to = new ArrayList<>();
-        for(NA receiver : receivers){
-            NA prev = djikGraph.get(receiver).get(RP).getPrev();
+        for (NA receiver : receivers) {
+            NA prev = djikGraph.get(RP).get(receiver).getPrev();
             NA now = receiver;
-            if(prev == receiver){
+            if (prev == RP) {
                 treeAdd(ret, RP, now);
             }
             //do recursive to build tree trace
-            while (djikGraph.get(receiver).get(prev).getWeight() != 0){
-                treeAdd(ret, now, prev);
-//                receiver = prev;
+            while (djikGraph.get(now).get(RP).getWeight() != 0) {
+                treeAdd(ret, prev, now);
                 now = prev;
-                prev = djikGraph.get(receiver).get(prev).getPrev();
+                prev = djikGraph.get(RP).get(prev).getPrev();
             }
-            
+
         }
         return ret;
     }
