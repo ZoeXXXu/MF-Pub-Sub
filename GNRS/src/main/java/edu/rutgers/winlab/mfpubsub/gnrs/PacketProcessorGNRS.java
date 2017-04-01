@@ -51,8 +51,10 @@ public class PacketProcessorGNRS extends PacketProcessor {
             switch (pkt.getPayload().getType()) {
                 case MFPacketGNRSPayloadQuery.MF_GNRS_PACKET_PAYLOAD_TYPE_QUERY:
                     response(pkt);
+                    break;
                 case MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC:
                     renewMulticast((MFPacketGNRSPayloadAssoc) pkt.getPayload());
+                    break;
                 default:
                     System.err.println("receive a wrong packet type which shouldn't receive actually.");
             }
