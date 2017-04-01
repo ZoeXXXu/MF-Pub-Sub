@@ -6,6 +6,7 @@
 package edu.rutgers.winlab.mfpubsub.pubsubnode;
 
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,6 +65,18 @@ public class SPFATest {
         printWeight(weight);
 
         DijkstraTree dijkstraTree = new DijkstraTree(weight);
+        
+        ArrayList<NA> receivers = new ArrayList<>();
+        receivers.add(na6);
+        receivers.add(na5);
+        HashMap<NA, ArrayList<NA>> tree = dijkstraTree.getTree(na1, receivers);
+        
+        for(Map.Entry<NA, ArrayList<NA>> branch : tree.entrySet()){
+            branch.getKey().print(System.out.printf("\nfrom ")).printf("to ");
+            for(NA na : branch.getValue()){
+                na.print(System.out).printf(" ");
+            }
+        }
     }
 
     private void printWeight(HashMap<NA, HashMap<NA, Integer>> weight) {
