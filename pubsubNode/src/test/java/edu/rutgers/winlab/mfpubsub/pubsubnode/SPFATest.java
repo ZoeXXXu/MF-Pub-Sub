@@ -65,18 +65,14 @@ public class SPFATest {
         printWeight(weight);
 
         DijkstraTree dijkstraTree = new DijkstraTree(weight);
-        
+
         ArrayList<NA> receivers = new ArrayList<>();
-        receivers.add(na6);
+//        receivers.add(na6);
         receivers.add(na3);
         HashMap<NA, ArrayList<NA>> tree = dijkstraTree.getTree(na1, receivers);
-        
-        for(Map.Entry<NA, ArrayList<NA>> branch : tree.entrySet()){
-            branch.getKey().print(System.out.printf("\nfrom ")).printf("to ");
-            for(NA na : branch.getValue()){
-                na.print(System.out).printf(" ");
-            }
-        }
+        printTree(tree);
+        dijkstraTree.getBranch(na6, na1, tree);
+        printTree(tree);
     }
 
     private void printWeight(HashMap<NA, HashMap<NA, Integer>> weight) {
@@ -87,6 +83,16 @@ public class SPFATest {
                 edge.getKey().print(System.out).printf("(" + edge.getValue().toString() + ")");
             }
         }
+    }
+
+    private void printTree(HashMap<NA, ArrayList<NA>> tree) {
+        for (Map.Entry<NA, ArrayList<NA>> branch : tree.entrySet()) {
+            branch.getKey().print(System.out.printf("\n")).printf(" : ");
+            for (NA na : branch.getValue()) {
+                na.print(System.out).printf(" ");
+            }
+        }
+        System.out.println();
     }
 
 }

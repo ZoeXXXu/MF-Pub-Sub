@@ -29,13 +29,13 @@ public class DijkstraTree {
 
     public DijkstraTree(HashMap<NA, HashMap<NA, Integer>> graph) {
         this.weightGraph = graph;
-        
+
         initial(graph.keySet());
         UpdateDistance();
         printDjik();
     }
-    
-    public void Renew(HashMap<NA, HashMap<NA, Integer>> graph){
+
+    public void Renew(HashMap<NA, HashMap<NA, Integer>> graph) {
         this.weightGraph = graph;
         initial(graph.keySet());
         UpdateDistance();
@@ -137,7 +137,21 @@ public class DijkstraTree {
                 now = prev;
                 prev = djikGraph.get(RP).get(prev).getPrev();
             }
+        }
+        return ret;
+    }
 
+    public HashMap<NA, ArrayList<NA>> getBranch(NA receiver, NA RP, HashMap<NA, ArrayList<NA>> ret) {
+        NA prev = djikGraph.get(RP).get(receiver).getPrev();
+        NA now = receiver;
+        if (prev == RP) {
+            treeAdd(ret, RP, now);
+        }
+        //do recursive to build tree trace
+        while (djikGraph.get(now).get(RP).getWeight() != 0) {
+            treeAdd(ret, prev, now);
+            now = prev;
+            prev = djikGraph.get(RP).get(prev).getPrev();
         }
         return ret;
     }
