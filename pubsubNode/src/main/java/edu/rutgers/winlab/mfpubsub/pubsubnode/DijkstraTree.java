@@ -11,8 +11,6 @@ import edu.rutgers.winlab.mfpubsub.common.structure.Vertice;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,14 +22,21 @@ public class DijkstraTree {
 
     private final HashMap<NA, HashMap<NA, Vertice>> djikGraph = new HashMap<>();
 
-    private final HashMap<NA, HashMap<NA, Integer>> weightGraph;
+    private HashMap<NA, HashMap<NA, Integer>> weightGraph;
 
 //    private final ArrayList<NA> visited;
     private final HashMap<NA, Vertice> distance = new HashMap<>();
 
     public DijkstraTree(HashMap<NA, HashMap<NA, Integer>> graph) {
         this.weightGraph = graph;
-//        this.visited = new ArrayList<>();
+        
+        initial(graph.keySet());
+        UpdateDistance();
+        printDjik();
+    }
+    
+    public void Renew(HashMap<NA, HashMap<NA, Integer>> graph){
+        this.weightGraph = graph;
         initial(graph.keySet());
         UpdateDistance();
         printDjik();

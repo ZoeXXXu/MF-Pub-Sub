@@ -68,7 +68,7 @@ public class SPFATest {
         
         ArrayList<NA> receivers = new ArrayList<>();
         receivers.add(na6);
-        receivers.add(na5);
+        receivers.add(na3);
         HashMap<NA, ArrayList<NA>> tree = dijkstraTree.getTree(na1, receivers);
         
         for(Map.Entry<NA, ArrayList<NA>> branch : tree.entrySet()){
