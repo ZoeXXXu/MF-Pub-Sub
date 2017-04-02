@@ -16,7 +16,6 @@ import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRS;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadQuery;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadResponse;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadSync;
-import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketNetworkRenew;
 import edu.rutgers.winlab.mfpubsub.common.structure.Address;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.io.IOException;
