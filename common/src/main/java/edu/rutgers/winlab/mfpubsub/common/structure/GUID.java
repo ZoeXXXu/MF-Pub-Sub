@@ -30,6 +30,10 @@ public class GUID implements Address {
         this.value = value;
     }
 
+    public byte[] getValue() {
+        return value;
+    }
+
     @Override
     public int hashCode() {
         int hash = 5;

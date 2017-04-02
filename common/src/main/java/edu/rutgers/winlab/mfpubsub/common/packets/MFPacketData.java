@@ -64,12 +64,14 @@ public class MFPacketData extends MFPacket {
         byte SID = packet[pos[0]++];
         GUID srcGUID = GUID.create(packet, pos);
         GUID dstGUID = GUID.create(packet, pos);
-        ISerializable payload = MFPacketDataPayloadFactory.createPayload(packet, pos);
-        switch(SID){
+//        ISerializable payload = MFPacketDataPayloadFactory.createPayload(SID, packet, pos);
+        switch (SID) {
             case MFPacketDataPublish.MF_PACKET_DATA_SID_PUBLISH:
-                return new MFPacketDataPublish(srcGUID, dstGUID, na, payload);
+                return new MFPacketDataPublish(srcGUID, dstGUID, na, MFPacketDataPayloadFactory.createPayload(packet, pos));
             case MFPacketDataUnicast.MF_PACKET_DATA_SID_UNICAST:
-                return new MFPacketDataUnicast(srcGUID, dstGUID, na, payload);
+                return new MFPacketDataUnicast(srcGUID, dstGUID, na, MFPacketDataPayloadFactory.createPayload(packet, pos));
+            case MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION:
+                return new MFPacketData(srcGUID, dstGUID, na, MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION, MFPacketDataPayloadSub.createSubPayload(packet, pos));
             default:
                 throw new IllegalArgumentException("Invalid data packet server ID: " + SID);
         }
