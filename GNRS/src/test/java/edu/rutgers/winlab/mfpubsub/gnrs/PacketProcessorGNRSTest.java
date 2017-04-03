@@ -79,8 +79,12 @@ public class PacketProcessorGNRSTest {
         byte[] gnrsGuidBuf = new byte[GUID.GUID_LENGTH];
         gnrsGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0xff;
         GUID gnrsGuid = new GUID(gnrsGuidBuf);
+        
+        byte[] pubsubGuidBuf = new byte[GUID.GUID_LENGTH];
+        pubsubGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0xfe;
+        GUID pubsubGuid = new GUID(pubsubGuidBuf);
 
-        PacketProcessorGNRS gnrs = new PacketProcessorGNRS(addrT, graphT, gnrsNA, GNRSneighbor);
+        PacketProcessorGNRS gnrs = new PacketProcessorGNRS(pubsubGuid, addrT, graphT, gnrsNA, GNRSneighbor);
         gnrs.print(System.out.printf("GNRS:")).println();
         gnrs.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         gnrs.start();

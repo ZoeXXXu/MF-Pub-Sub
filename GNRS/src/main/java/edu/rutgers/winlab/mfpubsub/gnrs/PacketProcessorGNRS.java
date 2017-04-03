@@ -8,6 +8,7 @@ package edu.rutgers.winlab.mfpubsub.gnrs;
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterface;
 import edu.rutgers.winlab.mfpubsub.common.elements.PacketProcessor;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacket;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketData;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRS;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadAssoc;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadQuery;
@@ -19,27 +20,31 @@ import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
  * @author zoe
  */
 public class PacketProcessorGNRS extends PacketProcessor {
-    
+
+    private final GUID PUBSUB;
+
     private final HashMap<GUID, NA> AddrTable;
     //should be stored in computation nodoe
     private final HashMap<GUID, ArrayList<GUID>> GraphTable;
+
+    private final HashMap<GUID, ArrayList<MFPacketGNRS>> pendingTable = new HashMap<>();
 
 //    public PacketProcessorGNRS(HashMap<GUID, ArrayList<GUID>> GraphTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
 //        super(myNA, neighbors);
 //        this.AddrTable = new HashMap<>();
 //        this.GraphTable = GraphTable;
 //    }
-
-    public PacketProcessorGNRS(HashMap<GUID, NA> AddrTable, HashMap<GUID, ArrayList<GUID>> GraphTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
+    public PacketProcessorGNRS(GUID PUBSUB, HashMap<GUID, NA> AddrTable, HashMap<GUID, ArrayList<GUID>> GraphTable, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
         super(myNA, neighbors);
+        this.PUBSUB = PUBSUB;
         this.AddrTable = AddrTable;
         this.GraphTable = GraphTable;
     }
@@ -64,9 +69,14 @@ public class PacketProcessorGNRS extends PacketProcessor {
     }
 
     private void response(MFPacketGNRS query) throws IOException {
-        NA rsp = AddrTable.get(((MFPacketGNRSPayloadQuery) query.getPayload()).getQuery());
+        GUID queriedGUID = ((MFPacketGNRSPayloadQuery) query.getPayload()).getQuery();
+        NA rsp = AddrTable.get(queriedGUID);
         if (rsp != null) {
             sendToNeighbor(new NA(3), new MFPacketGNRS(query.getDstNA(), query.getSrcNa(), new MFPacketGNRSPayloadResponse(((MFPacketGNRSPayloadQuery) query.getPayload()).getQuery(), rsp)));
+        } else {
+            //query pubsub for multicast tree since it isn't stored in GNRS
+            PTadd(PUBSUB, query);
+            sendToNeighbor(AddrTable.get(PUBSUB), new MFPacketGNRS(getNa(), NA.NA_NULL, new MFPacketGNRSPayloadQuery(queriedGUID)));
         }
     }
 
@@ -84,6 +94,13 @@ public class PacketProcessorGNRS extends PacketProcessor {
             }
         } else {//the normal GNRS update msg
             AddrTable.put(assoc.getTopicGUID(), assoc.getRP());
+        }
+
+        if (pendingTable.containsKey(assoc.getTopicGUID())) {
+            ArrayList<MFPacketGNRS> packets = pendingTable.get(assoc.getTopicGUID());
+            for (MFPacketGNRS pkt : packets) {
+                response(pkt);
+            }
         }
     }
 
@@ -146,4 +163,12 @@ public class PacketProcessorGNRS extends PacketProcessor {
 //            }
 //        }
 //    }
+
+    public void PTadd(GUID dst, MFPacketGNRS packet) {
+        ArrayList<MFPacketGNRS> pendings = pendingTable.get(dst);
+        if (pendings == null) {
+            pendingTable.put(dst, pendings = new ArrayList<>());
+        }
+        pendings.add(packet);
+    }
 }
