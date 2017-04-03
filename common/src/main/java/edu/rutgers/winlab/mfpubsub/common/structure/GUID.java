@@ -74,4 +74,12 @@ public class GUID implements Address {
         return Helper.printBuf(ps.printf("["), value, 0, GUID_LENGTH).printf("]");
     }
 
+    public static transient final GUID GUID_NULL = new GUID(new byte[GUID_LENGTH]);
+    
+    public boolean isNULL(){
+        if(this.value.equals(GUID_NULL)){
+            return true;
+        }
+        return false;
+    }
 }

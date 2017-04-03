@@ -64,6 +64,10 @@ public class PacketProcessorTest {
         SocketAddress l13_1 = new InetSocketAddress("127.0.0.1", 10001);
         SocketAddress l13_3 = new InetSocketAddress("127.0.0.1", 10003);
 
+        byte[] value = new byte[GUID.GUID_LENGTH];
+        value[GUID.GUID_LENGTH - 1] = (byte) 99;
+        GUID GNRS = new GUID(value);
+        
         HashMap<NA, NetworkInterface> neighbor1 = new HashMap<>();
         neighbor1.put(na2, new NetworkInterfaceUDP(l12_1, l12_2));
         neighbor1.put(na3, new NetworkInterfaceUDP(l13_1, l13_3));

@@ -57,8 +57,8 @@ public class MFPacketGNRSPayloadAssocTest {
         NA dstNa = new NA(Helper.getRandomInt());
         dstNa.print(System.out.printf("dstNa=")).println();
 
-        HashMap<NA, List<Address>> tree = new HashMap<>();
-        ArrayList<GUID> subs = new ArrayList<>();
+        HashMap<NA, ArrayList<Address>> tree = new HashMap<>();
+//        ArrayList<GUID> subs = new ArrayList<>();
         ArrayList<Address> multicast = new ArrayList<>();
         ArrayList<Address> multicast2 = new ArrayList<>();
         int val = 2;
@@ -71,9 +71,10 @@ public class MFPacketGNRSPayloadAssocTest {
         multicast.add(new NA(3));
         tree.put(new NA(1), multicast);
 
-        subs.add(l2guid);
+//        subs.add(l2guid);
+
         MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa,
-                new MFPacketGNRSPayloadAssoc(guid, new NA(1), MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, subs, tree));
+                new MFPacketGNRSPayloadAssoc(guid, new NA(1), MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, l2guid, tree));
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         pkt.serialize(baos);

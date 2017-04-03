@@ -72,6 +72,8 @@ public class MFPacketData extends MFPacket {
                 return new MFPacketDataUnicast(srcGUID, dstGUID, na, MFPacketDataPayloadFactory.createPayload(packet, pos));
             case MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION:
                 return new MFPacketData(srcGUID, dstGUID, na, MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION, MFPacketDataPayloadSub.createSubPayload(packet, pos));
+            case MFPacketDataPayloadUnsub.MF_PACKET_DATA_SID_UNSUBSCRIPTION:
+                return new MFPacketData(srcGUID, dstGUID, na, MFPacketDataPayloadUnsub.MF_PACKET_DATA_SID_UNSUBSCRIPTION, MFPacketDataPayloadUnsub.createSubPayload(packet, pos));
             default:
                 throw new IllegalArgumentException("Invalid data packet server ID: " + SID);
         }

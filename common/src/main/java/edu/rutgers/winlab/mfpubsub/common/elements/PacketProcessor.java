@@ -7,6 +7,7 @@ package edu.rutgers.winlab.mfpubsub.common.elements;
 
 import edu.rutgers.winlab.mfpubsub.common.FIFOEntry;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacket;
+import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -24,6 +25,7 @@ import java.util.logging.Logger;
 public abstract class PacketProcessor {
 
     private final NA na;
+//    private final GUID GNRS;
     private final PriorityBlockingQueue<FIFOEntry<MFPacket>> incomingQueue = new PriorityBlockingQueue<>();
     private final HashMap<NA, NetworkInterface> neighbors;
     private boolean running;
@@ -31,6 +33,10 @@ public abstract class PacketProcessor {
     public NA getNa() {
         return na;
     }
+
+//    public GUID getGNRS() {
+//        return GNRS;
+//    }
 
     public int getIncomingQueueSize() {
         return incomingQueue.size();
@@ -63,6 +69,7 @@ public abstract class PacketProcessor {
 
     public PacketProcessor(NA myNA, HashMap<NA, NetworkInterface> neighbors) {
         this.na = myNA;
+//        this.GNRS = GNRS;
         this.neighbors = neighbors;
         for (NetworkInterface i : neighbors.values()) {
             i.setPacketReceivedHandler(addToIncomingQueue);
