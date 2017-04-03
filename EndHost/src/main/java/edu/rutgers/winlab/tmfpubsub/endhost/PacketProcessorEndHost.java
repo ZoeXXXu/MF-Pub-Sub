@@ -24,11 +24,11 @@ import java.util.HashMap;
  */
 public class PacketProcessorEndHost extends PacketProcessor {
 
-    private final GUID myGUID;
+//    private final GUID myGUID;
 
     public PacketProcessorEndHost(GUID myGUID, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
         super(myNA, neighbors);
-        this.myGUID = myGUID;
+//        this.myGUID = myGUID;
     }
 
     @Override
