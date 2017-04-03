@@ -72,7 +72,7 @@ public class PacketProcessorGNRS extends PacketProcessor {
         GUID queriedGUID = ((MFPacketGNRSPayloadQuery) query.getPayload()).getQuery();
         NA rsp = AddrTable.get(queriedGUID);
         if (rsp != null) {
-            sendToNeighbor(new NA(3), new MFPacketGNRS(query.getDstNA(), query.getSrcNa(), new MFPacketGNRSPayloadResponse(((MFPacketGNRSPayloadQuery) query.getPayload()).getQuery(), rsp)));
+            sendToNeighbor(null , new MFPacketGNRS(query.getDstNA(), query.getSrcNa(), new MFPacketGNRSPayloadResponse(((MFPacketGNRSPayloadQuery) query.getPayload()).getQuery(), rsp)));
         } else {
             //query pubsub for multicast tree since it isn't stored in GNRS
             PTadd(PUBSUB, query);
