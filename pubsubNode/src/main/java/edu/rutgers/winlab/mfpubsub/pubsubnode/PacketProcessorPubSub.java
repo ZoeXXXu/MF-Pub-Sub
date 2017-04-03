@@ -13,6 +13,7 @@ import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPayloadSub;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPayloadUnsub;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRS;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadAssoc;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketGNRSPayloadQuery;
 import edu.rutgers.winlab.mfpubsub.common.structure.Address;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
@@ -58,20 +59,28 @@ public class PacketProcessorPubSub extends PacketProcessor {
 
     @Override
     protected void handlePacket(MFPacket packet) throws IOException {
-        if (packet.getType() == MFPacketData.MF_PACKET_TYPE_DATA) {
-            MFPacketData pkt = (MFPacketData) packet;
-            switch (pkt.getSID()) {
-                case MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION:
-                    AddBranch(((MFPacketDataPayloadSub) pkt.getPayload()).getTopicGUID(), pkt.getsrcGuid());
-                    break;
-                case MFPacketDataPayloadUnsub.MF_PACKET_DATA_SID_UNSUBSCRIPTION:
-                    DeleteBranch(((MFPacketDataPayloadSub) pkt.getPayload()).getTopicGUID(), pkt.getsrcGuid());
-                    break;
-                default:
-                    System.err.println("receive a wrong packet type which shouldn't receive actually.");
-            }
-        } else {
-            System.err.println("receive a wrong packet type which shouldn't receive actually.");
+        switch (packet.getType()) {
+            case MFPacketData.MF_PACKET_TYPE_DATA:
+                MFPacketData pkt = (MFPacketData) packet;
+                switch (pkt.getSID()) {
+                    case MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION:
+                        AddBranch(((MFPacketDataPayloadSub) pkt.getPayload()).getTopicGUID(), pkt.getsrcGuid());
+                        break;
+                    case MFPacketDataPayloadUnsub.MF_PACKET_DATA_SID_UNSUBSCRIPTION:
+                        DeleteBranch(((MFPacketDataPayloadSub) pkt.getPayload()).getTopicGUID(), pkt.getsrcGuid());
+                        break;
+                    default:
+                        System.err.println("receive a wrong packet type which shouldn't receive actually.");
+                }
+                break;
+            case MFPacketGNRS.MF_PACKET_TYPE_GNRS:
+                if(((MFPacketGNRS)packet).getPayload().getType() == MFPacketGNRSPayloadQuery.MF_GNRS_PACKET_PAYLOAD_TYPE_QUERY){
+                    //build tree and send assoc msg
+                    TreeBuild((MFPacketGNRSPayloadQuery) ((MFPacketGNRS)packet).getPayload());
+                }
+                break;
+            default:
+                System.err.println("receive a wrong packet type which shouldn't receive actually.");
         }
     }
 
@@ -125,8 +134,12 @@ public class PacketProcessorPubSub extends PacketProcessor {
 
     }
 
-    public void TreeBuild(GUID topicGUID) {
-
+    public void TreeBuild(MFPacketGNRSPayloadQuery query) {
+        //arraylist<GUID> receiver = do recursive look up
+        //get connected arraylist<NA> NAs from receiver
+        //build tree though NAs
+        //add GUID follow the NAs in the tree
+        //Store/send to multiTree/GNRS
     }
 
     private ArrayList<NA> GUIDtoNA(GUID topic) {
