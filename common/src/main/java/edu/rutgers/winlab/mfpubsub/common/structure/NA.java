@@ -66,4 +66,9 @@ public class NA implements Address {
         return ps.printf("[%08x]", val);
     }
 
+    public static transient final NA NA_NULL = new NA(0);
+    
+    public boolean isNULL(){
+        return this.equals(NA_NULL);
+    }
 }

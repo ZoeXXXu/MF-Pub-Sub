@@ -34,6 +34,10 @@ public abstract class PacketProcessor {
         return na;
     }
 
+    public HashMap<NA, NetworkInterface> getNeighbors() {
+        return neighbors;
+    }
+
 //    public GUID getGNRS() {
 //        return GNRS;
 //    }
