@@ -27,7 +27,7 @@ import java.util.Map;
  * @author zoe
  */
 public class PacketProcessorGNRS extends PacketProcessor {
-
+    
     private final HashMap<GUID, NA> AddrTable;
     //should be stored in computation nodoe
     private final HashMap<GUID, ArrayList<GUID>> GraphTable;
@@ -87,44 +87,63 @@ public class PacketProcessorGNRS extends PacketProcessor {
         }
     }
 
-    private void GraphAdd(GUID key, List<GUID> value) {
+    private void GraphAdd(GUID key, GUID value) {
         ArrayList<GUID> tmp = GraphTable.get(key);
         if (tmp == null) {
             GraphTable.put(key, tmp = new ArrayList<>());
         }
-        for (GUID guid : value) {
-            tmp.add(guid);
-        }
+        tmp.add(value);
     }
+//    private void GraphAdd(GUID key, List<GUID> value) {
+//        ArrayList<GUID> tmp = GraphTable.get(key);
+//        if (tmp == null) {
+//            GraphTable.put(key, tmp = new ArrayList<>());
+//        }
+//        for (GUID guid : value) {
+//            tmp.add(guid);
+//        }
+//    }
 
     private void SubTrees(MFPacketGNRSPayloadAssoc assoc) throws IOException {
-        if (assoc.getNumofsub() != 0) {
+//        if (assoc.getNumofsub() != 0) {
+//            GraphAdd(assoc.getTopicGUID(), assoc.getSubscriber());
+//        }
+        if (!assoc.getSubscriber().isNULL()) {
             GraphAdd(assoc.getTopicGUID(), assoc.getSubscriber());
         }
         AddrTable.put(assoc.getTopicGUID(), assoc.getRP());
-        HashMap<NA, List<Address>> tree = assoc.getTree();
-        for (Map.Entry<NA, List<Address>> entry : tree.entrySet()) {
+        HashMap<NA, ArrayList<Address>> tree = assoc.getTree();
+        for (Map.Entry<NA, ArrayList<Address>> entry : tree.entrySet()) {
             sendToNeighbor(entry.getKey(), new MFPacketGNRS(getNa(), entry.getKey(), new MFPacketGNRSPayloadSync(assoc.getTopicGUID(), entry.getValue())));
         }
     }
 
     private void UnsubTree(MFPacketGNRSPayloadAssoc assoc) throws IOException {
-        if (assoc.getNumofsub() != 0) {
+//        if (assoc.getNumofsub() != 0) {
+//            GraphDelete(assoc.getTopicGUID(), assoc.getSubscriber());
+//        }
+        if (!assoc.getSubscriber().isNULL()) {
             GraphDelete(assoc.getTopicGUID(), assoc.getSubscriber());
         }
         AddrTable.put(assoc.getTopicGUID(), assoc.getRP());
-        HashMap<NA, List<Address>> tree = assoc.getTree();
-        for (Map.Entry<NA, List<Address>> entry : tree.entrySet()) {
+        HashMap<NA, ArrayList<Address>> tree = assoc.getTree();
+        for (Map.Entry<NA, ArrayList<Address>> entry : tree.entrySet()) {
             sendToNeighbor(entry.getKey(), new MFPacketGNRS(getNa(), entry.getKey(), new MFPacketGNRSPayloadSync(assoc.getTopicGUID(), entry.getValue())));
         }
     }
 
-    private void GraphDelete(GUID key, List<GUID> value) {
+    private void GraphDelete(GUID key, GUID value) {
         ArrayList<GUID> tmp = GraphTable.get(key);
         if (tmp != null) {
-            for (GUID guid : value) {
-                tmp.remove(guid);
-            }
+            tmp.remove(value);
         }
     }
+//    private void GraphDelete(GUID key, List<GUID> value) {
+//        ArrayList<GUID> tmp = GraphTable.get(key);
+//        if (tmp != null) {
+//            for (GUID guid : value) {
+//                tmp.remove(guid);
+//            }
+//        }
+//    }
 }

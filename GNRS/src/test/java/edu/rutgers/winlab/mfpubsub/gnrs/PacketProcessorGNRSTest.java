@@ -75,7 +75,11 @@ public class PacketProcessorGNRSTest {
 
         graphT.put(topicGuid, subs);
 
-        NA gnrsNA = new NA(160);
+        NA gnrsNA = new NA(Integer.MAX_VALUE);
+        byte[] gnrsGuidBuf = new byte[GUID.GUID_LENGTH];
+        gnrsGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0xff;
+        GUID gnrsGuid = new GUID(gnrsGuidBuf);
+
         PacketProcessorGNRS gnrs = new PacketProcessorGNRS(addrT, graphT, gnrsNA, GNRSneighbor);
         gnrs.print(System.out.printf("GNRS:")).println();
         gnrs.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
