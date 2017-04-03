@@ -120,6 +120,7 @@ public class PacketProcessorPubSub extends PacketProcessor {
         }
     }
 
+    //may not need it any more
     private void RenewTree(GUID topicGUID) {
 
     }
