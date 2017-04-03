@@ -11,6 +11,7 @@ import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -41,7 +42,6 @@ public abstract class PacketProcessor {
 //    public GUID getGNRS() {
 //        return GNRS;
 //    }
-
     public int getIncomingQueueSize() {
         return incomingQueue.size();
     }
@@ -103,7 +103,12 @@ public abstract class PacketProcessor {
     protected void sendToNeighbor(NA neighbor, MFPacket packet) throws IOException {
         NetworkInterface i = neighbors.get(neighbor);
         if (i == null) {
-            throw new IOException(String.format("Cannot find neighbor: %s on %s", neighbor.getVal(), getNa().getVal()));
+            if (neighbors.size() == 1) {
+                ArrayList<NA> one = new ArrayList<>(neighbors.keySet());
+                i = neighbors.get(one.get(0));
+            } else {
+                throw new IOException(String.format("Cannot find neighbor: %s on %s", neighbor.getVal(), getNa().getVal()));
+            }
         }
         i.send(packet);
     }
