@@ -6,6 +6,7 @@
 package edu.rutgers.winlab.mfpubsub.pubsubnode;
 
 import edu.rutgers.winlab.mfpubsub.common.structure.Address;
+import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import edu.rutgers.winlab.mfpubsub.common.structure.Vertice;
 import java.util.ArrayDeque;
@@ -29,7 +30,6 @@ public class DijkstraTree {
 
     public DijkstraTree(HashMap<NA, HashMap<NA, Integer>> graph) {
         this.weightGraph = graph;
-
         initial(graph.keySet());
         UpdateDistance();
         printDjik();
@@ -99,8 +99,8 @@ public class DijkstraTree {
 //
 //        return ret;
 //    }
-    private void treeAdd(HashMap<NA, ArrayList<NA>> tree, NA key, NA value) {
-        ArrayList<NA> tmp = tree.get(key);
+    private void treeAdd(HashMap<NA, ArrayList<Address>> tree, NA key, NA value) {
+        ArrayList<Address> tmp = tree.get(key);
         if (tmp == null) {
             tree.put(key, tmp = new ArrayList<>());
         }
@@ -122,9 +122,9 @@ public class DijkstraTree {
 
     //need a translator to change the ArrayList<GUID>(subscribers) to ArrayList<NA>(connected edge routers)
     //Then add guid at the list<Address> of NA at the mapping of each NA of receivers
-    public HashMap<NA, ArrayList<NA>> getTree(NA RP, ArrayList<NA> receivers) {
-        HashMap<NA, ArrayList<NA>> ret = new HashMap<>();
-        ArrayList<NA> to = new ArrayList<>();
+    public HashMap<NA, ArrayList<Address>> getTree(NA RP, ArrayList<NA> receivers) {
+        HashMap<NA, ArrayList<Address>> ret = new HashMap<>();
+//        ArrayList<NA> to = new ArrayList<>();
         for (NA receiver : receivers) {
             NA prev = djikGraph.get(RP).get(receiver).getPrev();
             NA now = receiver;
@@ -141,7 +141,7 @@ public class DijkstraTree {
         return ret;
     }
 
-    public HashMap<NA, ArrayList<NA>> getBranch(NA receiver, NA RP, HashMap<NA, ArrayList<NA>> ret) {
+    public HashMap<NA, ArrayList<Address>> getBranch(NA receiver, NA RP, HashMap<NA, ArrayList<Address>> ret) {
         NA prev = djikGraph.get(RP).get(receiver).getPrev();
         NA now = receiver;
         if (prev == RP) {
@@ -154,5 +154,35 @@ public class DijkstraTree {
             prev = djikGraph.get(RP).get(prev).getPrev();
         }
         return ret;
+    }
+
+    public HashMap<NA, ArrayList<Address>> deleteBranch(NA receiver, NA RP, HashMap<NA, ArrayList<Address>> ret) {
+        NA prev = djikGraph.get(RP).get(receiver).getPrev();
+        NA now = receiver;
+        if (prev == RP) {
+            treeDelete(ret, RP, now);
+        }
+        //do recursive to build tree trace
+        while (djikGraph.get(now).get(RP).getWeight() != 0) {
+            treeDelete(ret, prev, now);
+            now = prev;
+            prev = djikGraph.get(RP).get(prev).getPrev();
+        }
+        return ret;
+    }
+
+    public void treeDelete(HashMap<NA, ArrayList<Address>> tree, NA key, Address value) {
+        ArrayList<Address> tmp = tree.get(key);
+        if (value instanceof GUID) {
+            tmp.remove(value);
+        } else if (value instanceof NA) {
+            if (!tree.containsKey((NA) value)) {
+                tmp.remove(value);
+            }
+        }
+
+        if (tmp.isEmpty()) {
+            tree.remove(key);
+        }
     }
 }

@@ -5,6 +5,8 @@
  */
 package edu.rutgers.winlab.mfpubsub.pubsubnode;
 
+import edu.rutgers.winlab.mfpubsub.common.structure.Address;
+import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,9 +71,16 @@ public class SPFATest {
         ArrayList<NA> receivers = new ArrayList<>();
 //        receivers.add(na6);
         receivers.add(na3);
-        HashMap<NA, ArrayList<NA>> tree = dijkstraTree.getTree(na1, receivers);
+        HashMap<NA, ArrayList<Address>> tree = dijkstraTree.getTree(na1, receivers);
         printTree(tree);
-        dijkstraTree.getBranch(na6, na1, tree);
+        dijkstraTree.getBranch(na6, na1, tree);        
+//        byte[] dstGuidBuf = new byte[GUID.GUID_LENGTH];
+//        dstGuidBuf[GUID.GUID_LENGTH - 1] = 0x2;
+//        GUID Guid = new GUID(dstGuidBuf);
+//        ArrayList<Address> tmp = tree.get(na1);
+//        tmp.add(Guid);
+        printTree(tree);
+        dijkstraTree.deleteBranch(na6, na1, tree);
         printTree(tree);
     }
 
@@ -85,11 +94,11 @@ public class SPFATest {
         }
     }
 
-    private void printTree(HashMap<NA, ArrayList<NA>> tree) {
-        for (Map.Entry<NA, ArrayList<NA>> branch : tree.entrySet()) {
+    private void printTree(HashMap<NA, ArrayList<Address>> tree) {
+        for (Map.Entry<NA, ArrayList<Address>> branch : tree.entrySet()) {
             branch.getKey().print(System.out.printf("\n")).printf(" : ");
-            for (NA na : branch.getValue()) {
-                na.print(System.out).printf(" ");
+            for (Address addr : branch.getValue()) {
+                addr.print(System.out).printf(" ");
             }
         }
         System.out.println();
