@@ -19,6 +19,7 @@ import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 
 /**
@@ -41,8 +42,6 @@ public class PacketProcessorPubSub extends PacketProcessor {
 //    private final HashMap<GUID, HashMap<NA, ArrayList<NA>>> coreTree = new HashMap<>();
     //this NA is the NA of connected router, not hosts' NA
     private final HashMap<GUID, NA> RoutingTable;
-
-    private final HashMap<GUID, NA> RPs = new HashMap<>();
 
     private final HashMap<GUID, ArrayList<GUID>> GraphTable;
 
@@ -147,7 +146,7 @@ public class PacketProcessorPubSub extends PacketProcessor {
     }
 
     private NA getRP(GUID topic) {
-        NA rp = RPs.get(topic);
+        NA rp = RoutingTable.get(topic);
         if (rp.getVal() != 0) {
             return rp;
         }
@@ -165,10 +164,15 @@ public class PacketProcessorPubSub extends PacketProcessor {
 //    ArrayList<GUID> receivers = new ArrayList<>();
     private ArrayList RecursiveLookUp(GUID topic) {
         ArrayList<GUID> receivers = GraphTable.get(topic);
+        receivers.remove(0);
+        ArrayList<GUID> tmp;
         for (GUID i : receivers) {
             if (GraphTable.containsKey(i)) {
                 receivers.remove(i);
-                receivers.addAll(GraphTable.get(i));
+                tmp = GraphTable.get(i);
+                tmp.remove(0);
+                receivers.addAll((Collection<? extends GUID>) tmp.clone());
+                tmp.clear();
             }
         }
         return receivers;
