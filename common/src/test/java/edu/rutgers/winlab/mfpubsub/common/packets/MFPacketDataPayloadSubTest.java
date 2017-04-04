@@ -13,33 +13,20 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  *
  * @author zoe
  */
-public class MFPacketGNRSPayloadAssocTest {
+public class MFPacketDataPayloadSubTest {
 
-    public MFPacketGNRSPayloadAssocTest() {
+    public MFPacketDataPayloadSubTest() {
     }
 
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
-    /**
-     * Test of getTopicGUID method, of class MFPacketGNRSPayloadAssoc.
-     */
     @Test
-    public void testGetTopicGUID() throws IOException {
+    public void testSomeMethod() throws IOException {
         byte[] guidBuf = new byte[GUID.GUID_LENGTH];
         Helper.getRandomBytes(guidBuf, 0, GUID.GUID_LENGTH);
         GUID guid = new GUID(guidBuf);
@@ -57,24 +44,7 @@ public class MFPacketGNRSPayloadAssocTest {
         NA dstNa = new NA(Helper.getRandomInt());
         dstNa.print(System.out.printf("dstNa=")).println();
 
-        HashMap<NA, ArrayList<Address>> tree = new HashMap<>();
-//        ArrayList<GUID> subs = new ArrayList<>();
-        ArrayList<Address> multicast = new ArrayList<>();
-        ArrayList<Address> multicast2 = new ArrayList<>();
-        int val = 2;
-
-        multicast2.add(new NA(val++));
-        multicast2.add(l1guid);
-        tree.put(new NA(val++), multicast2);
-
-        multicast.add(new NA(2));
-        multicast.add(new NA(3));
-        tree.put(new NA(1), multicast);
-
-//        subs.add(l2guid);
-        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa,
-                new MFPacketGNRSPayloadAssoc(guid, new NA(1), MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, l2guid, tree));
-
+        MFPacketData pkt = new MFPacketData(l2guid, l2guid, dstNa, MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION, l1guid);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         pkt.serialize(baos);
         byte[] pktBuf = baos.toByteArray();
@@ -84,11 +54,6 @@ public class MFPacketGNRSPayloadAssocTest {
         int[] pos = {0};
         MFPacket packet = MFPacketFactory.createPacket(pktBuf, pos);
         packet.print(System.out);
-        ((MFPacketGNRSPayloadAssoc) ((MFPacketGNRS) packet).getPayload()).printTree(System.out);
-//        System.out.println("NA list: " + ((MFPacketGNRSPayloadSync)((MFPacketGNRS)packet).getPayload()).getNAs());
-//        System.out.println("GUID list: " + ((MFPacketGNRSPayloadSync)((MFPacketGNRS)packet).getPayload()).getGUIDs());
-        System.out.println();
-
     }
 
 }

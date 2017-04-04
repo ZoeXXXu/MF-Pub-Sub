@@ -40,7 +40,7 @@ public class MFPacketDataPayloadSub implements ISerializable {
 
     @Override
     public PrintStream print(PrintStream ps) {
-        return topicGUID.print(ps.printf(", topicGUID="));
+        return topicGUID.print(ps.printf("[topicGUID=")).printf("]");
     }
 
 }
