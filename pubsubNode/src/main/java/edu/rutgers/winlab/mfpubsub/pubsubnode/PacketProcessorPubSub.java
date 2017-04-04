@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -53,7 +54,7 @@ public class PacketProcessorPubSub extends PacketProcessor {
         this.coreWeightGraph = weightGraph;
         this.RoutingTable = RoutingTable;
         this.GraphTable = GraphTable;
-        this.dijkstraGraph = new DijkstraTree(this.coreWeightGraph);
+        this.dijkstraGraph = new DijkstraTree(weightGraph);
     }
 
     @Override
@@ -73,9 +74,9 @@ public class PacketProcessorPubSub extends PacketProcessor {
                 }
                 break;
             case MFPacketGNRS.MF_PACKET_TYPE_GNRS:
-                if(((MFPacketGNRS)packet).getPayload().getType() == MFPacketGNRSPayloadQuery.MF_GNRS_PACKET_PAYLOAD_TYPE_QUERY){
+                if (((MFPacketGNRS) packet).getPayload().getType() == MFPacketGNRSPayloadQuery.MF_GNRS_PACKET_PAYLOAD_TYPE_QUERY) {
                     //build tree and send assoc msg
-                    TreeBuild((MFPacketGNRSPayloadQuery) ((MFPacketGNRS)packet).getPayload());
+                    TreeBuild((MFPacketGNRSPayloadQuery) ((MFPacketGNRS) packet).getPayload());
                 }
                 break;
             default:
@@ -142,6 +143,8 @@ public class PacketProcessorPubSub extends PacketProcessor {
     }
 
     private ArrayList<NA> GUIDtoNA(GUID topic) {
+        //do recursive look up
+        //do guid to na transformation
         return null;
     }
 
@@ -223,6 +226,16 @@ public class PacketProcessorPubSub extends PacketProcessor {
                         DeleteBranch(parentTopic, src, rp, router);
                     }
                 }
+            }
+        }
+    }
+
+    public void printGraph() {
+        System.out.println("************************graph****************************");
+        for (Map.Entry<GUID, ArrayList<GUID>> node : GraphTable.entrySet()) {
+            node.getKey().print(System.out.printf("\nguid ")).printf("to: ");
+            for (GUID edge : node.getValue()) {
+                edge.print(System.out);
             }
         }
     }

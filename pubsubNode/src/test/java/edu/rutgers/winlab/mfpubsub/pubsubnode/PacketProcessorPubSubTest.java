@@ -13,7 +13,7 @@ import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPayloadSub;
 import edu.rutgers.winlab.mfpubsub.common.structure.Address;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
-import edu.rutgers.winlab.mfpubsub.pubsubnode.
+//import edu.rutgers.winlab.mfpubsub.pubsubnode.
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -45,10 +45,6 @@ public class PacketProcessorPubSubTest {
     SocketAddress lp3 = new InetSocketAddress("127.0.0.1", 10018);
     SocketAddress l3p = new InetSocketAddress("127.0.0.1", 10019);
 
-    HashMap<NA, HashMap<NA, Integer>> weight = new HashMap<>();
-    HashMap<GUID, NA> addrT = new HashMap<>();
-    HashMap<GUID, ArrayList<GUID>> graphT = new HashMap<>();
-
     private final DatagramSocket socket;
 
     public PacketProcessorPubSubTest() throws SocketException {
@@ -68,9 +64,9 @@ public class PacketProcessorPubSubTest {
         pubsubGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0xfe;
         GUID pubsubGuid = new GUID(pubsubGuidBuf);
         //topic GUID
-        byte[] dstGuidBuf = new byte[GUID.GUID_LENGTH];
-        dstGuidBuf[GUID.GUID_LENGTH - 1] = 0x2;
-        GUID topicGuid = new GUID(dstGuidBuf);
+        byte[] footballGuidBuf = new byte[GUID.GUID_LENGTH];
+        footballGuidBuf[GUID.GUID_LENGTH - 1] = 0x2;
+        GUID footballGuid = new GUID(footballGuidBuf);
         //user1
         byte[] user1GuidBuf = new byte[GUID.GUID_LENGTH];
         user1GuidBuf[GUID.GUID_LENGTH - 1] = 0x3;
@@ -87,38 +83,15 @@ public class PacketProcessorPubSubTest {
         byte[] prtGuidBuf = new byte[GUID.GUID_LENGTH];
         prtGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0x2f;
         GUID prtGuid = new GUID(prtGuidBuf);
-
-        tree();
-
-        ArrayList<GUID> subs = new ArrayList<>();
-        addrT.put(pubGuid, na1);
-//        addrT.put(user1Guid, na6);
-        addrT.put(user2Guid, na6);
-        addrT.put(topicGuid, na4);
-        subs.add(prtGuid);
-        subs.add(user2Guid);
-        graphT.put(topicGuid, subs);
-
-        HashMap<NA, NetworkInterface> PubSubneighbor = new HashMap<>();
-        PubSubneighbor.put(na3, new NetworkInterfaceUDP(lp3, l3p));
-
-        PacketProcessorPubSub node = new PacketProcessorPubSub(gnrsNA, pubsubGuid, weight, addrT, graphT, pubsubNA, PubSubneighbor);
-        //test
-        send(new MFPacketData(user1Guid, pubsubGuid, pubsubNA, MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION, topicGuid));
-    }
-
-    private void send(MFPacket packet) throws IOException {
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            packet.serialize(baos);
-            byte[] buf = baos.toByteArray();
-            DatagramPacket dp = new DatagramPacket(buf, buf.length, lp3);
-            socket.send(dp);
-        }
-    }
-
-    private void tree() {
+        //sports GUID
+        byte[] sportsGuidBuf = new byte[GUID.GUID_LENGTH];
+        sportsGuidBuf[GUID.GUID_LENGTH - 1] = 0x6;
+        GUID sportsGuid = new GUID(sportsGuidBuf);
 
         HashMap<NA, HashMap<NA, Integer>> weight = new HashMap<>();
+        HashMap<GUID, NA> addrT = new HashMap<>();
+        HashMap<GUID, ArrayList<GUID>> graphT = new HashMap<>();
+
         HashMap<NA, Integer> edges = new HashMap<>();
 
         edges.put(na2, 1);
@@ -154,17 +127,51 @@ public class PacketProcessorPubSubTest {
 
         printWeight(weight);
 
-//        return weight;
-//        return new DijkstraTree(weight);
-//        ArrayList<NA> receivers = new ArrayList<>();
-//        receivers.add(na6);
-//        receivers.add(na3);
-//        HashMap<NA, ArrayList<Address>> tree = dijkstraTree.getTree(na1, receivers);
-//        printTree(tree);
-//        dijkstraTree.getBranch(na6, na1, tree);
-//        printTree(tree);
-//        dijkstraTree.deleteBranch(na6, na1, tree);
-//        printTree(tree);
+        ArrayList<GUID> subs = new ArrayList<>();
+        addrT.put(pubGuid, na1);
+//        addrT.put(user1Guid, na6);
+        addrT.put(user2Guid, na6);
+        addrT.put(footballGuid, na4);
+        subs.add(sportsGuid);
+        subs.add(user2Guid);
+        graphT.put(footballGuid, (ArrayList<GUID>) subs.clone());
+        subs.clear();
+        subs.add(sportsGuid);
+        graphT.put(prtGuid, subs);
+
+        HashMap<NA, NetworkInterface> PubSubneighbor = new HashMap<>();
+        PubSubneighbor.put(na3, new NetworkInterfaceUDP(lp3, l3p));
+        
+        for(Map.Entry<GUID, ArrayList<GUID>> entry : graphT.entrySet()){
+            entry.getKey().print(System.out).printf(" : ");
+            for(GUID mapping : entry.getValue()){
+                mapping.print(System.out).printf(" ");
+            }
+        }
+
+        PacketProcessorPubSub node = new PacketProcessorPubSub(gnrsNA, pubsubGuid, weight, addrT, graphT, pubsubNA, PubSubneighbor);
+        node.printGraph();
+        //test
+        send(new MFPacketData(user1Guid, pubsubGuid, pubsubNA, MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION, footballGuid));
+    }
+
+    private void send(MFPacket packet) throws IOException {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            packet.serialize(baos);
+            byte[] buf = baos.toByteArray();
+            DatagramPacket dp = new DatagramPacket(buf, buf.length, lp3);
+            socket.send(dp);
+        }
+    }
+
+    private void printG(HashMap<GUID, ArrayList<GUID>> graphT) {
+        System.out.println("************************graph****************************");
+        for (Map.Entry<GUID, ArrayList<GUID>> node : graphT.entrySet()) {
+            node.getKey().print(System.out.printf("\nguid ")).printf("to: ");
+            for (GUID edge : node.getValue()) {
+                edge.print(System.out);
+            }
+        }
     }
 
     private void printWeight(HashMap<NA, HashMap<NA, Integer>> weight) {
