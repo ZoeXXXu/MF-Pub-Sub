@@ -54,6 +54,10 @@ public class PacketProcessorGNRSTest {
         byte[] pubGuidBuf = new byte[GUID.GUID_LENGTH];
         pubGuidBuf[GUID.GUID_LENGTH - 1] = 0x5;
         GUID pubGuid = new GUID(pubGuidBuf);
+        //topic parent GUID
+        byte[] prtGuidBuf = new byte[GUID.GUID_LENGTH];
+        prtGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0x2f;
+        GUID prtGuid = new GUID(prtGuidBuf);
 
         SocketAddress lg3 = new InetSocketAddress("127.0.0.1", 10016);
         SocketAddress l3g = new InetSocketAddress("127.0.0.1", 10017);
@@ -70,6 +74,7 @@ public class PacketProcessorGNRSTest {
         addrT.put(user2Guid, new NA(8));
         addrT.put(topicGuid, new NA(4));
 
+        subs.add(prtGuid);
         subs.add(user1Guid);
         subs.add(user2Guid);
 
@@ -79,7 +84,7 @@ public class PacketProcessorGNRSTest {
         byte[] gnrsGuidBuf = new byte[GUID.GUID_LENGTH];
         gnrsGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0xff;
         GUID gnrsGuid = new GUID(gnrsGuidBuf);
-        
+
         byte[] pubsubGuidBuf = new byte[GUID.GUID_LENGTH];
         pubsubGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0xfe;
         GUID pubsubGuid = new GUID(pubsubGuidBuf);
