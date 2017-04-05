@@ -65,12 +65,15 @@ public class PacketProcessorPubSub extends PacketProcessor {
                 switch (pkt.getSID()) {
                     case MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION:
                         AddBranch(((MFPacketDataPayloadSub) pkt.getPayload()).getTopicGUID(), pkt.getsrcGuid());
+                        printGraph();
+                        printMulti();
                         break;
                     case MFPacketDataPayloadUnsub.MF_PACKET_DATA_SID_UNSUBSCRIPTION:
-                        DeleteBranch(((MFPacketDataPayloadSub) pkt.getPayload()).getTopicGUID(), pkt.getsrcGuid());
+//                        DeleteBranch(((MFPacketDataPayloadUnsub) pkt.getPayload()).getTopicGUID(), pkt.getsrcGuid());
                         break;
                     default:
-                        System.err.println("receive a wrong packet type which shouldn't receive actually.");
+                        packet.print(System.err);
+                        System.err.println(String.format("receive a wrong packet type which shouldn't receive actually. %s", pkt.getSID()));
                 }
                 break;
             case MFPacketGNRS.MF_PACKET_TYPE_GNRS:
@@ -86,26 +89,24 @@ public class PacketProcessorPubSub extends PacketProcessor {
 
     public void AddBranch(GUID topic, GUID src) throws IOException {
         GraphAdd(topic, src);
-        printGraph();
         NA rp = getRP(topic);
         NA router = RoutingTable.get(src);
-
-        multiTree.put(topic, dijkstraGraph.getBranch(router, rp, multiTree.get(topic)));
-        ArrayList<Address> branch = multiTree.get(topic).get(router);
-        if (branch == null) {
-            multiTree.get(topic).put(router, branch = new ArrayList<>());
+        if (multiTree.containsKey(topic)) {
+            multiTree.put(topic, dijkstraGraph.getBranch(router, rp, multiTree.get(topic)));
+            ArrayList<Address> branch = multiTree.get(topic).get(router);
+            if (branch == null) {
+                multiTree.get(topic).put(router, branch = new ArrayList<>());
+            }
+            branch.add(src);
+            sendToNeighbor(NA.NA_NULL, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, rp, MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, src, multiTree.get(topic))));
         }
-        branch.add(src);
-        sendToNeighbor(NA.NA_NULL, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, rp, MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, src, multiTree.get(topic))));
         GUID parent = GraphTable.get(topic).get(0);
         ArrayList<GUID> parents = GraphTable.get(parent);
         //recursively add branch to its parent trees if the tree exist and user didn't sub to that parent topic
         if (!parents.isEmpty()) {
             for (GUID parentTopic : parents) {
-                if (multiTree.containsKey(parentTopic)) {
-                    if (!GraphTable.get(parentTopic).contains(src)) {
-                        AddBranch(parentTopic, src, rp, router);
-                    }
+                if (multiTree.containsKey(parentTopic) && !GraphTable.get(parentTopic).contains(src)) {
+                    AddBranch(parentTopic, src, rp, router);
                 }
             }
         }
@@ -190,13 +191,13 @@ public class PacketProcessorPubSub extends PacketProcessor {
 
 //    ArrayList<GUID> receivers = new ArrayList<>();
     private ArrayList<GUID> RecursiveLookUp(GUID topic) {
-        ArrayList<GUID> receivers = GraphTable.get(topic);
+        ArrayList<GUID> receivers = (ArrayList<GUID>) GraphTable.get(topic).clone();
         receivers.remove(0);
         ArrayList<GUID> tmp;
         for (GUID i : receivers) {
             if (GraphTable.containsKey(i)) {
                 receivers.remove(i);
-                tmp = GraphTable.get(i);
+                tmp = (ArrayList<GUID>) GraphTable.get(i).clone();
                 tmp.remove(0);
                 receivers.addAll((Collection<? extends GUID>) tmp.clone());
                 tmp.clear();
@@ -209,13 +210,19 @@ public class PacketProcessorPubSub extends PacketProcessor {
         GraphDelete(topic, src);
         NA rp = getRP(topic);
         NA router = RoutingTable.get(src);
-        dijkstraGraph.treeDelete(multiTree.get(topic), router, src);
-        multiTree.put(topic, dijkstraGraph.deleteBranch(router, rp, multiTree.get(topic)));
-        sendToNeighbor(NA.NA_NULL, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, rp, MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_UNSUB, src, multiTree.get(topic))));
+        if (multiTree.containsKey(topic)) {
+            dijkstraGraph.treeDelete(multiTree.get(topic), router, src);
+            dijkstraGraph.deleteBranch(router, rp, multiTree.get(topic));
+            if (multiTree.get(topic).isEmpty()) {
+                multiTree.remove(topic);
+            }
+            sendToNeighbor(NA.NA_NULL, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, rp, MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_UNSUB, src, multiTree.get(topic))));
+        }
         GUID parent = GraphTable.get(topic).get(0);
+        ArrayList<GUID> parents = GraphTable.get(parent);
         //recursively add branch to its parent trees if the tree exist and user didn't sub to that parent topic
-        if (!parent.isNULL()) {
-            for (GUID parentTopic : GraphTable.get(parent)) {
+        if (!parents.isEmpty()) {
+            for (GUID parentTopic : parents) {
                 if (multiTree.containsKey(parentTopic)) {
                     if (!GraphTable.get(parentTopic).contains(src)) {
                         DeleteBranch(parentTopic, src, rp, router);
@@ -233,18 +240,21 @@ public class PacketProcessorPubSub extends PacketProcessor {
     }
 
     private void DeleteBranch(GUID topic, GUID src, NA rp, NA router) throws IOException {
-//        ArrayList<Address> branch = multiTree.get(topic).get(router);
-//        branch.remove(src);
-//        if(branch.isEmpty()){
-//            multiTree.get(topic).remove(router);
-//        }
+        printMulti();
         dijkstraGraph.treeDelete(multiTree.get(topic), router, src);
-        multiTree.put(topic, dijkstraGraph.deleteBranch(router, rp, multiTree.get(topic)));
+        printMulti();
+        dijkstraGraph.deleteBranch(router, rp, multiTree.get(topic));
         sendToNeighbor(NA.NA_NULL, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, rp, MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_UNSUB, GUID.GUID_NULL, multiTree.get(topic))));
+        if (multiTree.get(topic).isEmpty()) {
+            multiTree.remove(topic);
+        }
+        printGraph();
         GUID parent = GraphTable.get(topic).get(0);
+        ArrayList<GUID> parents = GraphTable.get(parent);
         //recursively add branch to its parent trees if the tree exist and user didn't sub to that parent topic
-        if (!parent.isNULL()) {
-            for (GUID parentTopic : GraphTable.get(parent)) {
+
+        if (!parents.isEmpty()) {
+            for (GUID parentTopic : parents) {
                 if (multiTree.containsKey(parentTopic)) {
                     if (!GraphTable.get(parentTopic).contains(src)) {
                         DeleteBranch(parentTopic, src, rp, router);

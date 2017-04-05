@@ -142,7 +142,7 @@ public class DijkstraTree {
     }
 
     public HashMap<NA, ArrayList<Address>> getBranch(NA receiver, NA RP, HashMap<NA, ArrayList<Address>> ret) {
-        if(ret == null){
+        if (ret == null) {
             ret = new HashMap<>();
         }
         NA prev = djikGraph.get(RP).get(receiver).getPrev();
@@ -159,11 +159,15 @@ public class DijkstraTree {
         return ret;
     }
 
-    public HashMap<NA, ArrayList<Address>> deleteBranch(NA receiver, NA RP, HashMap<NA, ArrayList<Address>> ret) {
+    public void deleteBranch(NA receiver, NA RP, HashMap<NA, ArrayList<Address>> ret) {
         NA prev = djikGraph.get(RP).get(receiver).getPrev();
         NA now = receiver;
         if (prev == RP) {
             treeDelete(ret, RP, now);
+        }
+        //if this is empty after the treeDelete above run
+        if(ret.isEmpty()){
+            return;
         }
         //do recursive to build tree trace
         while (djikGraph.get(now).get(RP).getWeight() != 0) {
@@ -171,11 +175,17 @@ public class DijkstraTree {
             now = prev;
             prev = djikGraph.get(RP).get(prev).getPrev();
         }
-        return ret;
+//        return ret;
     }
 
     public void treeDelete(HashMap<NA, ArrayList<Address>> tree, NA key, Address value) {
         ArrayList<Address> tmp = tree.get(key);
+        if (tmp == null) {
+            System.out.println("something wrongzsxdcfvgbhnjmk,l;,mknjbhvgcfxdsz");
+            key.print(System.out.printf("key: "));
+            value.print(System.out.printf("  value: "));
+            return;
+        }
         if (value instanceof GUID) {
             tmp.remove(value);
         } else if (value instanceof NA) {
