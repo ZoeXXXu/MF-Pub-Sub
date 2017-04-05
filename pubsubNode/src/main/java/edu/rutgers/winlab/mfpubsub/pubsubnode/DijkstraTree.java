@@ -32,7 +32,7 @@ public class DijkstraTree {
         this.weightGraph = graph;
         initial(graph.keySet());
         UpdateDistance();
-        printDjik();
+//        printDjik();
     }
 
     public void Renew(HashMap<NA, HashMap<NA, Integer>> graph) {
@@ -142,6 +142,9 @@ public class DijkstraTree {
     }
 
     public HashMap<NA, ArrayList<Address>> getBranch(NA receiver, NA RP, HashMap<NA, ArrayList<Address>> ret) {
+        if(ret == null){
+            ret = new HashMap<>();
+        }
         NA prev = djikGraph.get(RP).get(receiver).getPrev();
         NA now = receiver;
         if (prev == RP) {

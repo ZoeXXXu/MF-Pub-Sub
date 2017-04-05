@@ -65,7 +65,7 @@ public class PacketProcessorPubSubTest {
         GUID pubsubGuid = new GUID(pubsubGuidBuf);
         //topic GUID
         byte[] footballGuidBuf = new byte[GUID.GUID_LENGTH];
-        footballGuidBuf[GUID.GUID_LENGTH - 1] = 0x2;
+        footballGuidBuf[GUID.GUID_LENGTH - 2] = 0x2;
         GUID footballGuid = new GUID(footballGuidBuf);
         //user1
         byte[] user1GuidBuf = new byte[GUID.GUID_LENGTH];
@@ -80,12 +80,15 @@ public class PacketProcessorPubSubTest {
         pubGuidBuf[GUID.GUID_LENGTH - 1] = 0x5;
         GUID pubGuid = new GUID(pubGuidBuf);
         //topic parent GUID
-        byte[] prtGuidBuf = new byte[GUID.GUID_LENGTH];
-        prtGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0x2f;
-        GUID prtGuid = new GUID(prtGuidBuf);
+        byte[] fprtGuidBuf = new byte[GUID.GUID_LENGTH];
+        fprtGuidBuf[GUID.GUID_LENGTH - 2] = (byte) 0x2f;
+        GUID fprtGuid = new GUID(fprtGuidBuf);
+        byte[] sprtGuidBuf = new byte[GUID.GUID_LENGTH];
+        sprtGuidBuf[GUID.GUID_LENGTH - 2] = (byte) 0x3f;
+        GUID sprtGuid = new GUID(sprtGuidBuf);
         //sports GUID
         byte[] sportsGuidBuf = new byte[GUID.GUID_LENGTH];
-        sportsGuidBuf[GUID.GUID_LENGTH - 1] = 0x6;
+        sportsGuidBuf[GUID.GUID_LENGTH - 2] = 0x6;
         GUID sportsGuid = new GUID(sportsGuidBuf);
 
         HashMap<NA, HashMap<NA, Integer>> weight = new HashMap<>();
@@ -129,15 +132,23 @@ public class PacketProcessorPubSubTest {
 
         ArrayList<GUID> subs = new ArrayList<>();
         addrT.put(pubGuid, na1);
-//        addrT.put(user1Guid, na6);
+        addrT.put(user1Guid, na5);
         addrT.put(user2Guid, na6);
         addrT.put(footballGuid, na4);
+        addrT.put(sportsGuid, na4);
+        
+        subs.add(fprtGuid);
         subs.add(sportsGuid);
         subs.add(user2Guid);
         graphT.put(footballGuid, (ArrayList<GUID>) subs.clone());
         subs.clear();
-        subs.add(sportsGuid);
-        graphT.put(prtGuid, subs);
+        graphT.put(fprtGuid, (ArrayList<GUID>) subs.clone());
+        subs.add(footballGuid);
+        graphT.put(sprtGuid, (ArrayList<GUID>) subs.clone());
+        subs.clear();
+        subs.add(sprtGuid);
+//        subs.add(footballGuid);
+        graphT.put(sportsGuid, subs);
 
         HashMap<NA, NetworkInterface> PubSubneighbor = new HashMap<>();
         PubSubneighbor.put(na3, new NetworkInterfaceUDP(lp3, l3p));
@@ -151,6 +162,11 @@ public class PacketProcessorPubSubTest {
 
         PacketProcessorPubSub node = new PacketProcessorPubSub(gnrsNA, pubsubGuid, weight, addrT, graphT, pubsubNA, PubSubneighbor);
         node.printGraph();
+        node.build(footballGuid);
+        node.AddBranch(sportsGuid, user1Guid);
+        node.printMulti();
+//        node.start();
+        
         //test
         send(new MFPacketData(user1Guid, pubsubGuid, pubsubNA, MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION, footballGuid));
     }
