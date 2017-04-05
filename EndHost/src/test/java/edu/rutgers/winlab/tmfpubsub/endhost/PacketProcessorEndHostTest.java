@@ -7,7 +7,9 @@ package edu.rutgers.winlab.tmfpubsub.endhost;
 
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterface;
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterfaceUDP;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketData;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPayloadRandom;
+import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPayloadSub;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacketDataPublish;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
@@ -43,10 +45,14 @@ public class PacketProcessorEndHostTest {
 
         SocketAddress lp1 = new InetSocketAddress("127.0.0.1", 10014);
         SocketAddress lp2 = new InetSocketAddress("127.0.0.1", 10015);
-
-        byte[] dstGuidBuf = new byte[GUID.GUID_LENGTH];
-        dstGuidBuf[GUID.GUID_LENGTH - 1] = 0x2;
-        GUID topicGuid = new GUID(dstGuidBuf);
+        //topic GUID
+        byte[] footballGuidBuf = new byte[GUID.GUID_LENGTH];
+        footballGuidBuf[GUID.GUID_LENGTH - 2] = 0x2;
+        GUID footballGuid = new GUID(footballGuidBuf);
+        //sports GUID
+        byte[] sportsGuidBuf = new byte[GUID.GUID_LENGTH];
+        sportsGuidBuf[GUID.GUID_LENGTH - 2] = 0x6;
+        GUID sportsGuid = new GUID(sportsGuidBuf);
 
         byte[] user1GuidBuf = new byte[GUID.GUID_LENGTH];
         user1GuidBuf[GUID.GUID_LENGTH - 1] = 0x3;
@@ -58,6 +64,16 @@ public class PacketProcessorEndHostTest {
         pubGuidBuf[GUID.GUID_LENGTH - 1] = 0x5;
         GUID pubGuid = new GUID(pubGuidBuf);
 
+        //gnrs
+        NA gnrsNA = new NA(Integer.MAX_VALUE);
+        byte[] gnrsGuidBuf = new byte[GUID.GUID_LENGTH];
+        gnrsGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0xff;
+        GUID gnrsGuid = new GUID(gnrsGuidBuf);
+        //pubsub node
+        NA pubsubNA = new NA(Integer.MAX_VALUE - 1);
+        byte[] pubsubGuidBuf = new byte[GUID.GUID_LENGTH];
+        pubsubGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0xfe;
+        GUID pubsubGuid = new GUID(pubsubGuidBuf);
         byte[] payloadBuf = new byte[30];
         for (int i = 0; i < payloadBuf.length; i++) {
             payloadBuf[i] = (byte) (i & 0xFF);
@@ -85,8 +101,11 @@ public class PacketProcessorEndHostTest {
         sub2.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         sub2.start();
 
-        MFPacketDataPublish data = new MFPacketDataPublish(pubGuid, topicGuid, new NA(0), new MFPacketDataPayloadRandom(payloadBuf));
-        pub.send(na1, data);
+        sub1.send(na6, new MFPacketData(user1Guid, pubsubGuid, NA.NA_NULL, MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION, footballGuid));
+//        sub2.send(na6, new MFPacketData(user2Guid, pubsubGuid, NA.NA_NULL, MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION, sportsGuid));
+        Thread.sleep(10000);
+//        MFPacketDataPublish data = new MFPacketDataPublish(pubGuid, footballGuid, new NA(0), new MFPacketDataPayloadRandom(payloadBuf));
+//        pub.send(na1, data);
 
         Thread.sleep(10000);
         System.out.println("Stopping...");
