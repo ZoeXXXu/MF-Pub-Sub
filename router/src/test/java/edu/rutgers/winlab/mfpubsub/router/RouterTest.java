@@ -14,10 +14,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.HashMap;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -26,23 +22,17 @@ import org.junit.Test;
  */
 public class RouterTest {
 
+    NA na1 = new NA(1);
+    NA na2 = new NA(2);
+    NA na3 = new NA(3);
+    NA na4 = new NA(4);
+    NA na5 = new NA(5);
+    NA na6 = new NA(6);
+    NA na7 = new NA(7);
+    NA na8 = new NA(8);
+    NA na9 = new NA(9);
+
     public RouterTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
     }
 
     /**
@@ -53,18 +43,16 @@ public class RouterTest {
      */
     @Test
     public void testGetProcessor() throws SocketException, IOException, InterruptedException {
-        NA na1 = new NA(1);
-        NA na2 = new NA(2);
-        NA na3 = new NA(3);
-        NA na4 = new NA(4);
-        NA na5 = new NA(5);
-        NA na6 = new NA(6);
-
-        NA na7 = new NA(7);
-        NA na8 = new NA(8);
-        NA na9 = new NA(9);
-
-        NA gnrsNA = new NA(160);
+        //gnrs
+        NA gnrsNA = new NA(Integer.MAX_VALUE);
+        byte[] gnrsGuidBuf = new byte[GUID.GUID_LENGTH];
+        gnrsGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0xff;
+        GUID gnrsGuid = new GUID(gnrsGuidBuf);
+        //pubsub node
+        NA pubsubNA = new NA(Integer.MAX_VALUE - 1);
+        byte[] pubsubGuidBuf = new byte[GUID.GUID_LENGTH];
+        pubsubGuidBuf[GUID.GUID_LENGTH - 1] = (byte) 0xfe;
+        GUID pubsubGuid = new GUID(pubsubGuidBuf);
 
         SocketAddress l1 = new InetSocketAddress("127.0.0.1", 10000);
         SocketAddress l2 = new InetSocketAddress("127.0.0.1", 10002);
@@ -76,18 +64,17 @@ public class RouterTest {
         SocketAddress l8 = new InetSocketAddress("127.0.0.1", 10007);
         SocketAddress l9 = new InetSocketAddress("127.0.0.1", 10008);
         SocketAddress l10 = new InetSocketAddress("127.0.0.1", 10009);
-
         SocketAddress l11 = new InetSocketAddress("127.0.0.1", 10010);
         SocketAddress l12 = new InetSocketAddress("127.0.0.1", 10011);
-
         SocketAddress l13 = new InetSocketAddress("127.0.0.1", 10012);
         SocketAddress l14 = new InetSocketAddress("127.0.0.1", 10013);
 
         SocketAddress lp1 = new InetSocketAddress("127.0.0.1", 10014);
         SocketAddress lp2 = new InetSocketAddress("127.0.0.1", 10015);
-
         SocketAddress lg3 = new InetSocketAddress("127.0.0.1", 10016);
         SocketAddress l3g = new InetSocketAddress("127.0.0.1", 10017);
+        SocketAddress lp3 = new InetSocketAddress("127.0.0.1", 10018);
+        SocketAddress l3p = new InetSocketAddress("127.0.0.1", 10019);
 
 //        byte[] srcGuidBuf = new byte[GUID.GUID_LENGTH];
 //        srcGuidBuf[GUID.GUID_LENGTH - 1] = 0x1;
@@ -124,6 +111,7 @@ public class RouterTest {
         routingt1.put(na4, na2);
         routingt1.put(na5, na2);
         routingt1.put(na6, na2);
+        routingt1.put(pubsubNA, na2);
         routingt1.put(gnrsNA, na2);
         PacketProcessorRouter n1 = new PacketProcessorRouter(gnrsNA, new HashMap<GUID, NA>(), routingt1, na1, neighbor1);
 //        n1.MTadd(topicGuid, na4);
@@ -143,6 +131,7 @@ public class RouterTest {
         routingt2.put(na5, na3);
         routingt2.put(na6, na3);
         routingt2.put(gnrsNA, na3);
+        routingt2.put(pubsubNA, na3);
 //        multi2.addBranch(dstGuid, na4);
         PacketProcessorRouter n2 = new PacketProcessorRouter(gnrsNA, new HashMap<GUID, NA>(), routingt2, na2, neighbor2);
         n2.print(System.out.printf("n2:")).println();
@@ -156,12 +145,14 @@ public class RouterTest {
         neighbor3.put(na2, new NetworkInterfaceUDP(l4, l3));
         neighbor3.put(na4, new NetworkInterfaceUDP(l5, l6));
         neighbor3.put(gnrsNA, new NetworkInterfaceUDP(l3g, lg3));
+        neighbor3.put(pubsubNA, new NetworkInterfaceUDP(l3p, lp3));
         routingt3.put(na2, na2);
         routingt3.put(na1, na2);
         routingt3.put(na4, na4);
         routingt3.put(na5, na4);
         routingt3.put(na6, na4);
         routingt3.put(gnrsNA, gnrsNA);
+        routingt3.put(pubsubNA, pubsubNA);
         PacketProcessorRouter n3 = new PacketProcessorRouter(gnrsNA, new HashMap<GUID, NA>(), routingt3, na3, neighbor3);
         n3.print(System.out.printf("n3:")).println();
         n3.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
@@ -180,6 +171,7 @@ public class RouterTest {
         routingt4.put(na5, na5);
         routingt4.put(na6, na6);
         routingt4.put(gnrsNA, na3);
+        routingt4.put(pubsubNA, na3);
         PacketProcessorRouter n4 = new PacketProcessorRouter(gnrsNA, new HashMap<GUID, NA>(), routingt4, na4, neighbor4);
         n4.MTadd(topicGuid, na6);
         n4.print(System.out.printf("n4:")).println();
@@ -198,6 +190,7 @@ public class RouterTest {
         routingt5.put(na4, na4);
         routingt5.put(na6, na4);
         routingt5.put(gnrsNA, na4);
+        routingt5.put(pubsubNA, na4);
         PacketProcessorRouter n5 = new PacketProcessorRouter(gnrsNA, new HashMap<GUID, NA>(), routingt5, na5, neighbor5);
         n5.print(System.out.printf("n5:")).println();
         n5.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
@@ -217,6 +210,7 @@ public class RouterTest {
         routingt6.put(na4, na4);
         routingt6.put(na5, na4);
         routingt6.put(gnrsNA, na4);
+        routingt6.put(pubsubNA, na4);
         localGT6.put(user1Guid, na7);
         localGT6.put(user2Guid, na8);
         PacketProcessorRouter n6 = new PacketProcessorRouter(gnrsNA, localGT6, routingt6, na6, neighbor6);
@@ -274,8 +268,8 @@ public class RouterTest {
 //
 //        MFPacketDataPublish data = new MFPacketDataPublish(pubGuid, topicGuid, new NA(0), new MFPacketDataPayloadRandom(payloadBuf));
 //        pub.send(na1, data);
-        
-        Thread.sleep(10000);
+
+        Thread.sleep(30000);
         System.out.println("Stopping...");
         n1.stop();
         n2.stop();

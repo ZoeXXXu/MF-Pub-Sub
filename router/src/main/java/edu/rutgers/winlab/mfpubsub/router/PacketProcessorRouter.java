@@ -91,8 +91,9 @@ public class PacketProcessorRouter extends PacketProcessor {
                         default:
                             System.err.println("The GNRS packet type is out of service.");
                     }
+                    break;
                 default:
-                    System.err.println("PacketProcessorRouter.handlePacket(): shouldn't have such types.");
+                    System.err.println(String.format("shouldn't have such types %s.", packet.getType()));
             }
         } else { // i know where to forward the packet
             Routing(packet);
@@ -101,6 +102,7 @@ public class PacketProcessorRouter extends PacketProcessor {
 
     private void updateMT(MFPacketGNRSPayloadSync sync) {
         multicastTable.put(sync.getTopicGUID(), sync.getMulticast());
+        printMulti();
     }
 
     //this may need to be created at another class in mysql
@@ -109,7 +111,7 @@ public class PacketProcessorRouter extends PacketProcessor {
         if (i == null) {
             throw new IOException(String.format("Cannot find next hop: %s on %s", packet.getDstNA().getVal(), getNa().getVal()));
         }
-        getNa().print(System.out.printf("transmist by ")).println();
+        getNa().print(System.out).println("transmist packet " + packet.getType() + " to " + i.getVal());
         sendToNeighbor(i, packet);
     }
 
@@ -216,5 +218,16 @@ public class PacketProcessorRouter extends PacketProcessor {
             multicastTable.put(topic, multicast = new ArrayList<>());
         }
         multicast.add(addr);
+    }
+
+    private void printMulti() {
+        System.out.println("************************multiTable***************************");
+        for(Map.Entry<GUID, List<Address>> entry : multicastTable.entrySet()){
+            entry.getKey().print(System.out).printf(" : ");
+            for(Address addr : entry.getValue()){
+                addr.print(System.out).printf(" ");
+            }
+        }
+        System.out.println();
     }
 }
