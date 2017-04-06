@@ -54,6 +54,8 @@ public class MFPacketDataPayloadSubTest {
         int[] pos = {0};
         MFPacket packet = MFPacketFactory.createPacket(pktBuf, pos);
         packet.print(System.out);
+        
+        System.out.printf("sid:%02x", MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION);
     }
 
 }

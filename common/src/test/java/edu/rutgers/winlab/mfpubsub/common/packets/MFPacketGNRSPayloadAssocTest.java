@@ -87,6 +87,7 @@ public class MFPacketGNRSPayloadAssocTest {
         ((MFPacketGNRSPayloadAssoc) ((MFPacketGNRS) packet).getPayload()).printTree(System.out);
 //        System.out.println("NA list: " + ((MFPacketGNRSPayloadSync)((MFPacketGNRS)packet).getPayload()).getNAs());
 //        System.out.println("GUID list: " + ((MFPacketGNRSPayloadSync)((MFPacketGNRS)packet).getPayload()).getGUIDs());
+        System.out.println("numofbranches " + ((MFPacketGNRSPayloadAssoc) ((MFPacketGNRS) packet).getPayload()).getNumofbranches());
         System.out.println();
 
     }

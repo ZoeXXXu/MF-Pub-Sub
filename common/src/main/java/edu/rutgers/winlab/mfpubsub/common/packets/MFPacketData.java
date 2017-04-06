@@ -82,7 +82,7 @@ public class MFPacketData extends MFPacket {
     @Override
     public PrintStream print(PrintStream ps) {
         super.print(ps.printf("Data["));
-//        na.print(ps.printf(", NA="));
+        ps.printf(",SID=%02x", SID);
         srcGUID.print(ps.printf(", src="));
         dstGUID.print(ps.printf(", dst="));
         payload.print(ps.printf(", pld=")).printf("]");

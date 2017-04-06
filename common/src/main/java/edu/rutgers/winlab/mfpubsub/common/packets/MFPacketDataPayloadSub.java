@@ -5,6 +5,7 @@
  */
 package edu.rutgers.winlab.mfpubsub.common.packets;
 
+import edu.rutgers.winlab.mfpubsub.common.Helper;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import java.io.IOException;
 import java.io.OutputStream;
