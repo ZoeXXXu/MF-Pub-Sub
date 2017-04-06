@@ -86,7 +86,8 @@ public class PacketProcessorRouter extends PacketProcessor {
                             updateMT((MFPacketGNRSPayloadSync) ((MFPacketGNRS) packet).getPayload());
                             break;
                         case MFPacketGNRSPayloadResponse.MF_GNRS_PACKET_PAYLOAD_TYPE_RESPONSE:
-                            InvokePacket((MFPacketGNRSPayloadResponse) ((MFPacketGNRS) packet).getPayload());
+                            MFPacketGNRSPayloadResponse response = (MFPacketGNRSPayloadResponse) ((MFPacketGNRS) packet).getPayload();
+                            InvokePacket(response.getQueriedGUID(), response.getNa());
                             break;
                         default:
                             System.err.println("The GNRS packet type is out of service.");
@@ -100,9 +101,17 @@ public class PacketProcessorRouter extends PacketProcessor {
         }
     }
 
-    private void updateMT(MFPacketGNRSPayloadSync sync) {
+    private void updateMT(MFPacketGNRSPayloadSync sync) throws IOException {
         multicastTable.put(sync.getTopicGUID(), sync.getMulticast());
         printMulti();
+        if (pendingTable.containsKey(sync.getTopicGUID())) {
+            ArrayList<MFPacketData> packets = pendingTable.remove(sync.getTopicGUID());
+            if (packets != null) {
+                for (MFPacketData packet : packets) {
+                    PublishToMulticastGroup(packet);
+                }
+            }
+        }
     }
 
     //this may need to be created at another class in mysql
@@ -149,26 +158,26 @@ public class PacketProcessorRouter extends PacketProcessor {
      * @param packet
      */
     private void QueryGNRS(GUID dstGuid, MFPacketData packet) throws IOException {
-        getNa().print(System.out.printf("query GNRS with provided GUID: ")).println();
+        getNa().print(System.out).printf("query GNRS with provided GUID ");
+        dstGuid.print(System.out).println();
         Routing(new MFPacketGNRS(getNa(), GNRS_NA, new MFPacketGNRSPayloadQuery(dstGuid)));
         PTadd(dstGuid, packet);
     }
 
-    private void InvokePacket(MFPacketGNRSPayloadResponse response) throws IOException {
+    private void InvokePacket(GUID queriedGuid, NA na) throws IOException {
         getNa().print(System.out.printf("")).printf("invoke the paket with dstGUID: ");
-        response.getQueriedGUID().print(System.out.printf("")).println();
-        ArrayList<MFPacketData> packets = pendingTable.remove(response.getQueriedGUID());
-        NA na = response.getNa();
+        queriedGuid.print(System.out.printf("")).println();
+        ArrayList<MFPacketData> packets = pendingTable.remove(queriedGuid);
         if (packets != null) {
             for (MFPacketData packet : packets) {
-                Routing(new MFPacketDataPublish(packet.getsrcGuid(), packet.getdstGuid(), na, packet.getPayload()));
+                RenewNAandSend(packet, na);
+//                Routing(new MFPacketData(packet.getsrcGuid(), packet.getdstGuid(), na, packet.getSID(), packet.getPayload()));
             }
         }
     }
 
     private void RenewNAandSend(MFPacketData packet, NA na) throws IOException {
-//        getNa().print(System.out.printf("transmist by ")).println();
-        Routing(new MFPacketDataPublish(packet.getsrcGuid(), packet.getdstGuid(), na, packet.getPayload()));
+        Routing(new MFPacketData(packet.getsrcGuid(), packet.getdstGuid(), na, packet.getSID(), packet.getPayload()));
     }
 
     private void PublishToMulticastGroup(MFPacketData packet) throws IOException {
@@ -185,8 +194,7 @@ public class PacketProcessorRouter extends PacketProcessor {
                 }
             }
         } else {
-            //Or just print the notification?
-            throw new IOException(String.format("no GUID %s exist in NA %s", packet.getdstGuid(), getNa().getVal()));
+            PTadd(packet.getdstGuid(), packet);
         }
     }
 
@@ -211,20 +219,20 @@ public class PacketProcessorRouter extends PacketProcessor {
         }
         pendings.add(packet);
     }
-
-    public void MTadd(GUID topic, Address addr) {
-        List<Address> multicast = multicastTable.get(topic);
-        if (multicast == null) {
-            multicastTable.put(topic, multicast = new ArrayList<>());
-        }
-        multicast.add(addr);
-    }
+//
+//    public void MTadd(GUID topic, Address addr) {
+//        List<Address> multicast = multicastTable.get(topic);
+//        if (multicast == null) {
+//            multicastTable.put(topic, multicast = new ArrayList<>());
+//        }
+//        multicast.add(addr);
+//    }
 
     private void printMulti() {
         System.out.println("************************multiTable***************************");
-        for(Map.Entry<GUID, List<Address>> entry : multicastTable.entrySet()){
-            entry.getKey().print(System.out).printf(" : ");
-            for(Address addr : entry.getValue()){
+        for (Map.Entry<GUID, List<Address>> entry : multicastTable.entrySet()) {
+            entry.getKey().print(System.out.printf("\n")).printf(" : ");
+            for (Address addr : entry.getValue()) {
                 addr.print(System.out).printf(" ");
             }
         }

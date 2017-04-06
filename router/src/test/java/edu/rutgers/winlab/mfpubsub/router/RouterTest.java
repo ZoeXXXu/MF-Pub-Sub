@@ -173,7 +173,7 @@ public class RouterTest {
         routingt4.put(gnrsNA, na3);
         routingt4.put(pubsubNA, na3);
         PacketProcessorRouter n4 = new PacketProcessorRouter(gnrsNA, new HashMap<GUID, NA>(), routingt4, na4, neighbor4);
-        n4.MTadd(topicGuid, na6);
+//        n4.MTadd(topicGuid, na6);
         n4.print(System.out.printf("n4:")).println();
         n4.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         n4.printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
@@ -214,8 +214,8 @@ public class RouterTest {
         localGT6.put(user1Guid, na7);
         localGT6.put(user2Guid, na8);
         PacketProcessorRouter n6 = new PacketProcessorRouter(gnrsNA, localGT6, routingt6, na6, neighbor6);
-        n6.MTadd(topicGuid, user1Guid);
-        n6.MTadd(topicGuid, user2Guid);
+//        n6.MTadd(topicGuid, user1Guid);
+//        n6.MTadd(topicGuid, user2Guid);
         n6.print(System.out.printf("n6:")).println();
         n6.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
         n6.printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
