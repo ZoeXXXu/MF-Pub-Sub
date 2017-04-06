@@ -66,20 +66,22 @@ public class PacketProcessorPubSub extends PacketProcessor {
                     case MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION:
                         AddBranch(((MFPacketDataPayloadSub) pkt.getPayload()).getTopicGUID(), pkt.getsrcGuid());
                         printGraph();
-                        printMulti();
+//                        printMulti();
                         break;
                     case MFPacketDataPayloadUnsub.MF_PACKET_DATA_SID_UNSUBSCRIPTION:
 //                        DeleteBranch(((MFPacketDataPayloadUnsub) pkt.getPayload()).getTopicGUID(), pkt.getsrcGuid());
                         break;
                     default:
-                        packet.print(System.err);
+//                        packet.print(System.err);
+//                        System.out.println(packet.serialize(System.out));
                         System.err.println(String.format("receive a wrong packet type which shouldn't receive actually. %s", pkt.getSID()));
                 }
                 break;
             case MFPacketGNRS.MF_PACKET_TYPE_GNRS:
                 if (((MFPacketGNRS) packet).getPayload().getType() == MFPacketGNRSPayloadQuery.MF_GNRS_PACKET_PAYLOAD_TYPE_QUERY) {
                     //build tree and send assoc msg
-                    TreeBuild((MFPacketGNRSPayloadQuery) ((MFPacketGNRS) packet).getPayload());
+                    build(((MFPacketGNRSPayloadQuery) ((MFPacketGNRS) packet).getPayload()).getQuery());
+                    printMulti();
                 }
                 break;
             default:
@@ -98,7 +100,7 @@ public class PacketProcessorPubSub extends PacketProcessor {
                 multiTree.get(topic).put(router, branch = new ArrayList<>());
             }
             branch.add(src);
-            sendToNeighbor(NA.NA_NULL, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, rp, MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, src, multiTree.get(topic))));
+            sendToNeighbor(null, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, rp, MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, src, multiTree.get(topic))));
         }
         GUID parent = GraphTable.get(topic).get(0);
         ArrayList<GUID> parents = GraphTable.get(parent);
@@ -119,7 +121,7 @@ public class PacketProcessorPubSub extends PacketProcessor {
             multiTree.get(topic).put(router, branch = new ArrayList<>());
         }
         branch.add(src);
-        sendToNeighbor(NA.NA_NULL, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, rp, MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, GUID.GUID_NULL, multiTree.get(topic))));
+        sendToNeighbor(null, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, rp, MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, GUID.GUID_NULL, multiTree.get(topic))));
         GUID parent = GraphTable.get(topic).get(0);
         ArrayList<GUID> parents = GraphTable.get(parent);
         //recursively add branch to its parent trees if the tree exist and user didn't sub to that parent topic
@@ -136,16 +138,13 @@ public class PacketProcessorPubSub extends PacketProcessor {
 
     //may not need it any more
     private void RenewTree(GUID topicGUID) {
-
-    }
-
-    public void TreeBuild(MFPacketGNRSPayloadQuery query) {
+        
     }
 
     public void build(GUID topic) throws IOException {
         //arraylist<GUID> receiver = do recursive look up
         //get connected arraylist<NA> NAs from receiver
-        HashMap<NA, GUID> receivers = GUIDtoNA(topic);
+        HashMap<NA, ArrayList<GUID>> receivers = GUIDtoNA(topic);
         //build tree though NAs
         HashMap<NA, ArrayList<Address>> tree = dijkstraGraph.getTree(RoutingTable.get(topic), new ArrayList<>(receivers.keySet()));
         //add GUID follow the NAs in the tree
@@ -154,21 +153,25 @@ public class PacketProcessorPubSub extends PacketProcessor {
             if (tmp == null) {
                 tree.put(router, tmp = new ArrayList<>());
             }
-            tmp.add(receivers.get(router));
+            tmp.addAll(receivers.get(router));
         }
         //Store/send to multiTree/GNRS
         multiTree.put(topic, tree);
         sendToNeighbor(NA.NA_NULL, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, RoutingTable.get(topic), MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, GUID.GUID_NULL, tree)));
-        printMulti();
     }
 
-    private HashMap<NA, GUID> GUIDtoNA(GUID topic) {
-        HashMap<NA, GUID> ret = new HashMap<>();
+    private HashMap<NA, ArrayList<GUID>> GUIDtoNA(GUID topic) {
+        HashMap<NA, ArrayList<GUID>> ret = new HashMap<>();
         //do recursive look up
         ArrayList<GUID> receivers = RecursiveLookUp(topic);
         //do guid to na transformation
         for (GUID user : receivers) {
-            ret.put(RoutingTable.get(user), user);
+            user.print(System.out);
+            ArrayList<GUID> tmp = ret.get(RoutingTable.get(user));
+            if (tmp == null) {
+                ret.put(RoutingTable.get(user), tmp = new ArrayList<>());
+            }
+            tmp.add(user);
         }
         return ret;
     }
@@ -191,19 +194,20 @@ public class PacketProcessorPubSub extends PacketProcessor {
 
 //    ArrayList<GUID> receivers = new ArrayList<>();
     private ArrayList<GUID> RecursiveLookUp(GUID topic) {
-        ArrayList<GUID> receivers = (ArrayList<GUID>) GraphTable.get(topic).clone();
-        receivers.remove(0);
-        ArrayList<GUID> tmp;
-        for (GUID i : receivers) {
+        ArrayList<GUID> tmp = (ArrayList<GUID>) GraphTable.get(topic).clone();
+        tmp.remove(0);
+        ArrayList<GUID> ret = new ArrayList<>();
+        for (GUID i : tmp) {
             if (GraphTable.containsKey(i)) {
-                receivers.remove(i);
-                tmp = (ArrayList<GUID>) GraphTable.get(i).clone();
-                tmp.remove(0);
-                receivers.addAll((Collection<? extends GUID>) tmp.clone());
-                tmp.clear();
+                ret.addAll(RecursiveLookUp(i));
+//                int length = tmp.size();
+//                tmp.addAll((ArrayList<GUID>) GraphTable.get(i).clone());
+//                tmp.remove(length);
+            } else {
+                ret.add(i);
             }
         }
-        return receivers;
+        return ret;
     }
 
     private void DeleteBranch(GUID topic, GUID src) throws IOException {

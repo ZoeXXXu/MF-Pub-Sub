@@ -139,7 +139,7 @@ public class PacketProcessorPubSubTest {
 
         subs.add(fprtGuid);
         subs.add(sportsGuid);
-        subs.add(user2Guid);
+//        subs.add(user2Guid);
         graphT.put(footballGuid, (ArrayList<GUID>) subs.clone());
         subs.clear();
         graphT.put(fprtGuid, (ArrayList<GUID>) subs.clone());
@@ -160,7 +160,7 @@ public class PacketProcessorPubSubTest {
 //            }
 //        }
         PacketProcessorPubSub node = new PacketProcessorPubSub(gnrsNA, pubsubGuid, weight, addrT, graphT, pubsubNA, PubSubneighbor);
-        node.build(footballGuid);
+//        node.build(footballGuid);
 //        node.AddBranch(sportsGuid, user1Guid);
 //        node.printMulti();
         node.start();
