@@ -137,6 +137,7 @@ public class PacketProcessorPubSub extends PacketProcessor {
 
     public void RenewTrees() throws IOException {
         for (Map.Entry<GUID, HashMap<NA, ArrayList<Address>>> topic : multiTree.entrySet()) {
+//            System.out.println("(((((((((((((((((( renew tree ))))))))))))))))))");
             RenewTree(topic.getKey());
         }
     }
@@ -147,7 +148,10 @@ public class PacketProcessorPubSub extends PacketProcessor {
         if (istreeChanged(topic, tree)) {
             multiTree.put(topic, tree);
             sendToNeighbor(NA.NA_NULL, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, RoutingTable.get(topic), MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, GUID.GUID_NULL, tree)));
-        }
+        } 
+//        else {
+//            System.out.println("(((((((((((((((((( tree is same ))))))))))))))))))");
+//        }
     }
 
     public void build(GUID topic) throws IOException {
@@ -162,7 +166,7 @@ public class PacketProcessorPubSub extends PacketProcessor {
         ArrayList<GUID> receivers = RecursiveLookUp(topic);
         //do guid to na transformation
         for (GUID user : receivers) {
-            user.print(System.out);
+//            user.print(System.out);
             ArrayList<GUID> tmp = ret.get(RoutingTable.get(user));
             if (tmp == null) {
                 ret.put(RoutingTable.get(user), tmp = new ArrayList<>());
@@ -180,7 +184,7 @@ public class PacketProcessorPubSub extends PacketProcessor {
         throw new IllegalStateException(String.format("PubSub Node cannot find RP of topic %s", topic.print(System.out)));
     }
 
-    private void GraphAdd(GUID key, GUID value) {
+    public void GraphAdd(GUID key, GUID value) {
         ArrayList<GUID> tmp = GraphTable.get(key);
         if (tmp == null) {
             GraphTable.put(key, tmp = new ArrayList<>());
@@ -296,17 +300,18 @@ public class PacketProcessorPubSub extends PacketProcessor {
                 ArrayList<Address> comparedEntry = compared.get(entry.getKey());
                 if (comparedEntry != null && comparedEntry.size() == entry.getValue().size()) {
                     for (Address addr : entry.getValue()) {
+//                        addr.print(System.out.printf("new"));
                         if (!comparedEntry.contains(addr)) {
-                            return false;
+                            return true;
                         }
                     }
                 } else {
-                    return false;
+                    return true;
                 }
             }
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 
     private HashMap<NA, ArrayList<Address>> buildTree(GUID topic) {

@@ -144,7 +144,7 @@ public class PacketProcessorPubSubTest1 {
         graphT.put(sprtGuid, (ArrayList<GUID>) subs.clone());
         subs.clear();
         subs.add(sprtGuid);
-        subs.add(user1Guid);
+//        subs.add(user1Guid);
         graphT.put(sportsGuid, (ArrayList<GUID>) subs.clone());
 
         HashMap<NA, NetworkInterface> PubSubneighbor = new HashMap<>();
@@ -152,9 +152,12 @@ public class PacketProcessorPubSubTest1 {
 
         PacketProcessorPubSub node = new PacketProcessorPubSub(gnrsNA, pubsubGuid, weight, addrT, graphT, pubsubNA, PubSubneighbor);
         node.build(footballGuid);
-//        node.AddBranch(sportsGuid, user1Guid);
-//        node.printMulti();
-//        node.start();
+        node.printGraph();
+        node.GraphAdd(sportsGuid, user1Guid);
+        node.printGraph();
+        node.printMulti();
+        node.RenewTrees();
+        node.printMulti();
     }
 
     private void send(MFPacket packet) throws IOException {
