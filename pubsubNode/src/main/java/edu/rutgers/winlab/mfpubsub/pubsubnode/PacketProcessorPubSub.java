@@ -19,7 +19,6 @@ import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -136,28 +135,25 @@ public class PacketProcessorPubSub extends PacketProcessor {
         }
     }
 
-    //may not need it any more
-    private void RenewTree(GUID topicGUID) {
-        
+    public void RenewTrees() throws IOException {
+        for (Map.Entry<GUID, HashMap<NA, ArrayList<Address>>> topic : multiTree.entrySet()) {
+            RenewTree(topic.getKey());
+        }
+    }
+
+    private void RenewTree(GUID topic) throws IOException {
+        //different - Store/send to multiTree/GNRS
+        HashMap<NA, ArrayList<Address>> tree = buildTree(topic);
+        if (istreeChanged(topic, tree)) {
+            multiTree.put(topic, tree);
+            sendToNeighbor(NA.NA_NULL, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, RoutingTable.get(topic), MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, GUID.GUID_NULL, tree)));
+        }
     }
 
     public void build(GUID topic) throws IOException {
-        //arraylist<GUID> receiver = do recursive look up
-        //get connected arraylist<NA> NAs from receiver
-        HashMap<NA, ArrayList<GUID>> receivers = GUIDtoNA(topic);
-        //build tree though NAs
-        HashMap<NA, ArrayList<Address>> tree = dijkstraGraph.getTree(RoutingTable.get(topic), new ArrayList<>(receivers.keySet()));
-        //add GUID follow the NAs in the tree
-        for (NA router : receivers.keySet()) {
-            ArrayList<Address> tmp = tree.get(router);
-            if (tmp == null) {
-                tree.put(router, tmp = new ArrayList<>());
-            }
-            tmp.addAll(receivers.get(router));
-        }
         //Store/send to multiTree/GNRS
-        multiTree.put(topic, tree);
-        sendToNeighbor(NA.NA_NULL, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, RoutingTable.get(topic), MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, GUID.GUID_NULL, tree)));
+        multiTree.put(topic, buildTree(topic));
+        sendToNeighbor(NA.NA_NULL, new MFPacketGNRS(getNa(), GNRS, new MFPacketGNRSPayloadAssoc(topic, RoutingTable.get(topic), MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB, GUID.GUID_NULL, multiTree.get(topic))));
     }
 
     private HashMap<NA, ArrayList<GUID>> GUIDtoNA(GUID topic) {
@@ -291,5 +287,42 @@ public class PacketProcessorPubSub extends PacketProcessor {
             }
         }
         System.out.println();
+    }
+
+    private boolean istreeChanged(GUID topic, HashMap<NA, ArrayList<Address>> tree) {
+        HashMap<NA, ArrayList<Address>> compared = multiTree.get(topic);
+        if (tree.size() == compared.size()) {
+            for (Map.Entry<NA, ArrayList<Address>> entry : tree.entrySet()) {
+                ArrayList<Address> comparedEntry = compared.get(entry.getKey());
+                if (comparedEntry != null && comparedEntry.size() == entry.getValue().size()) {
+                    for (Address addr : entry.getValue()) {
+                        if (!comparedEntry.contains(addr)) {
+                            return false;
+                        }
+                    }
+                } else {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private HashMap<NA, ArrayList<Address>> buildTree(GUID topic) {
+        //arraylist<GUID> receiver = do recursive look up
+        //get connected arraylist<NA> NAs from receiver
+        HashMap<NA, ArrayList<GUID>> receivers = GUIDtoNA(topic);
+        //build tree though NAs
+        HashMap<NA, ArrayList<Address>> tree = dijkstraGraph.getTree(RoutingTable.get(topic), new ArrayList<>(receivers.keySet()));
+        //add GUID follow the NAs in the tree
+        for (NA router : receivers.keySet()) {
+            ArrayList<Address> tmp = tree.get(router);
+            if (tmp == null) {
+                tree.put(router, tmp = new ArrayList<>());
+            }
+            tmp.addAll(receivers.get(router));
+        }
+        return tree;
     }
 }

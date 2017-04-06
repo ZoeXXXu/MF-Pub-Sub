@@ -69,11 +69,14 @@ public class SPFATest {
         DijkstraTree dijkstraTree = new DijkstraTree(weight);
 
         ArrayList<NA> receivers = new ArrayList<>();
+        ArrayList<NA> receivers2 = new ArrayList<>();
 //        receivers.add(na6);
         receivers.add(na3);
         HashMap<NA, ArrayList<Address>> tree = dijkstraTree.getTree(na1, receivers);
+        
         printTree(tree);
-        dijkstraTree.getBranch(na6, na1, tree);        
+        dijkstraTree.getBranch(na6, na1, tree);
+
 //        byte[] dstGuidBuf = new byte[GUID.GUID_LENGTH];
 //        dstGuidBuf[GUID.GUID_LENGTH - 1] = 0x2;
 //        GUID Guid = new GUID(dstGuidBuf);

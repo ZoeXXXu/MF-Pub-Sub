@@ -124,7 +124,7 @@ public class DijkstraTree {
     //Then add guid at the list<Address> of NA at the mapping of each NA of receivers
     public HashMap<NA, ArrayList<Address>> getTree(NA RP, ArrayList<NA> receivers) {
         HashMap<NA, ArrayList<Address>> ret = new HashMap<>();
-//        ArrayList<NA> to = new ArrayList<>();
+        
         for (NA receiver : receivers) {
             NA prev = djikGraph.get(RP).get(receiver).getPrev();
             NA now = receiver;
