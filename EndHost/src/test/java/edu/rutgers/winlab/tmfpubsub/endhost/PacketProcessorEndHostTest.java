@@ -102,12 +102,12 @@ public class PacketProcessorEndHostTest {
         sub2.start();
 
         sub1.send(na6, new MFPacketData(user1Guid, pubsubGuid, NA.NA_NULL, MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION, footballGuid));
-//        sub2.send(na6, new MFPacketData(user2Guid, pubsubGuid, NA.NA_NULL, MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION, sportsGuid));
-        Thread.sleep(10000);
-//        MFPacketDataPublish data = new MFPacketDataPublish(pubGuid, footballGuid, new NA(0), new MFPacketDataPayloadRandom(payloadBuf));
-//        pub.send(na1, data);
+        sub2.send(na6, new MFPacketData(user2Guid, pubsubGuid, NA.NA_NULL, MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION, sportsGuid));
+        Thread.sleep(5000);
+        MFPacketDataPublish data = new MFPacketDataPublish(pubGuid, footballGuid, new NA(0), new MFPacketDataPayloadRandom(payloadBuf));
+        pub.send(na1, data);
 
-        Thread.sleep(10000);
+        Thread.sleep(30000);
         System.out.println("Stopping...");
         pub.stop();
         sub1.stop();
