@@ -139,7 +139,6 @@ public class PacketProcessorPubSubTest {
 
         subs.add(fprtGuid);
         subs.add(sportsGuid);
-//        subs.add(user2Guid);
         graphT.put(footballGuid, (ArrayList<GUID>) subs.clone());
         subs.clear();
         graphT.put(fprtGuid, (ArrayList<GUID>) subs.clone());
@@ -149,32 +148,13 @@ public class PacketProcessorPubSubTest {
         subs.add(sprtGuid);
         graphT.put(sportsGuid, (ArrayList<GUID>) subs.clone());
 
-//        printG(graphT);
         HashMap<NA, NetworkInterface> PubSubneighbor = new HashMap<>();
         PubSubneighbor.put(na3, new NetworkInterfaceUDP(lp3, l3p));
 
-//        for (Map.Entry<GUID, ArrayList<GUID>> entry : graphT.entrySet()) {
-//            entry.getKey().print(System.out).printf(" : ");
-//            for (GUID mapping : entry.getValue()) {
-//                mapping.print(System.out).printf(" ");
-//            }
-//        }
         PacketProcessorPubSub node = new PacketProcessorPubSub(gnrsNA, pubsubGuid, weight, addrT, graphT, pubsubNA, PubSubneighbor);
-//        node.build(footballGuid);
-//        node.AddBranch(sportsGuid, user1Guid);
-//        node.printMulti();
         node.start();
 
-//        System.out.println("send a join msg to pubsub");
-        //test
-//        send(new MFPacketData(user1Guid, pubsubGuid, pubsubNA, MFPacketDataPayloadSub.MF_PACKET_DATA_SID_SUBSCRIPTION, sportsGuid));
         Thread.sleep(30000);
-//        System.out.println("send a unjoin msg to pubsub");
-//        send(new MFPacketData(user2Guid, pubsubGuid, pubsubNA, MFPacketDataPayloadUnsub.MF_PACKET_DATA_SID_UNSUBSCRIPTION, footballGuid));
-//        Thread.sleep(1000);
-//        System.out.println("send a unjoin msg to pubsub");
-//        send(new MFPacketData(user1Guid, pubsubGuid, pubsubNA, MFPacketDataPayloadUnsub.MF_PACKET_DATA_SID_UNSUBSCRIPTION, sportsGuid));
-//        Thread.sleep(1000);
         node.stop();
     }
 
