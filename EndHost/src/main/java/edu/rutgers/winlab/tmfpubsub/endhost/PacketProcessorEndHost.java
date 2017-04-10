@@ -24,11 +24,11 @@ import java.util.HashMap;
  */
 public class PacketProcessorEndHost extends PacketProcessor {
 
-//    private final GUID myGUID;
+    private final GUID myGUID;
 
     public PacketProcessorEndHost(GUID myGUID, NA myNA, HashMap<NA, NetworkInterface> neighbors) {
         super(myNA, neighbors);
-//        this.myGUID = myGUID;
+        this.myGUID = myGUID;
     }
 
     @Override
@@ -44,7 +44,7 @@ public class PacketProcessorEndHost extends PacketProcessor {
     @Override
     protected void handlePacket(MFPacket packet) throws IOException {
         getNa().print(System.out.printf("NA ")).println("receive packet");
-//        ((MFPacketData) packet).getsrcGuid().print(System.out.printf("receive from the publisher ")).println();
+        
         switch (packet.getType()) {
             case MFPacketData.MF_PACKET_TYPE_DATA:
                 try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
@@ -55,8 +55,16 @@ public class PacketProcessorEndHost extends PacketProcessor {
                 break;
             case MFPacketGNRS.MF_PACKET_TYPE_GNRS:
                 getNa().print(System.err.printf("The end host should not receive the GNRS message. Please check the logic.")).println();
+                break;
             default:
                 System.err.println("not a correct packet type");
         }
+    }
+    
+    public void move(NA from, NA to) throws InterruptedException, IOException{
+        //remove router NA from end host enighbor table
+        NetworkInterface i = removeNeighbor(from);
+        //add router NA connection info at end host neighbor
+        addNeighbor(to, i);
     }
 }
