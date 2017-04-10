@@ -130,4 +130,22 @@ public abstract class PacketProcessor {
         return ps;
     }
 
+    public NetworkInterface removeNeighbor(NA neighbor) throws InterruptedException, IOException {
+        if (neighbors.containsKey(neighbor)) {
+            neighbors.get(neighbor).stop();
+            return this.neighbors.remove(neighbor);
+        } else {
+            throw new IOException(String.format("Cannot find neighbor: %s on NA %s", neighbor.getVal(), getNa().getVal()));
+        }
+    }
+    
+    public void addNeighbor(NA neighbor, NetworkInterface i) throws IOException, InterruptedException{
+        if (!neighbors.containsKey(neighbor)) {
+            neighbors.put(neighbor, i);
+            i.setPacketReceivedHandler(addToIncomingQueue);
+            i.start();
+        } else {
+            throw new IOException(String.format("neighbor %s is already on NA %s", neighbor.getVal(), getNa().getVal()));
+        }
+    }
 }
