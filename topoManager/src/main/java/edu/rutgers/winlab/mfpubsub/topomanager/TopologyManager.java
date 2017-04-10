@@ -23,10 +23,10 @@ import java.util.HashMap;
  */
 public class TopologyManager {
 
-    private final PacketProcessor processor;
-
+//    private final PacketProcessor processor;
+private final PacketProcessorTopologyManager manager;
     public TopologyManager(NA self, String filename, String tracefile, String ID) throws IOException {
-        processor = readTopo(self, filename, ID);
+        manager = new PacketProcessorTopologyManager(readTopo(self, filename, ID), tracefile, self, neighbors);
     }
 
     private GUID createGUID(byte[] guid) throws IOException {
@@ -89,9 +89,12 @@ public class TopologyManager {
 
     private class PacketProcessorTopologyManager extends PacketProcessor {
 
-        public PacketProcessorTopologyManager(String tracefile, NA myNA, HashMap<NA, NetworkInterface> neighbors) throws FileNotFoundException {
-            super(myNA, neighbors);
+        private final PacketProcessor processor;
+
+        public PacketProcessorTopologyManager(PacketProcessor processor, String tracefile) throws FileNotFoundException {
+            super(processor.getNa(), processor.getNeighbors());//processor neighbor and topomanager neighbor is different
             extractSelfTrace(new BufferedReader(new FileReader(tracefile)));
+            this.processor = processor;
         }
 
         @Override
