@@ -7,6 +7,7 @@ package edu.rutgers.winlab.mfpubsub.router;
 
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterface;
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterfaceUDP;
+import edu.rutgers.winlab.mfpubsub.common.elements.PacketProcessor;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
 import java.io.IOException;
@@ -133,10 +134,10 @@ public class RouterTest {
         routingt2.put(gnrsNA, na3);
         routingt2.put(pubsubNA, na3);
 //        multi2.addBranch(dstGuid, na4);
-        PacketProcessorRouter n2 = new PacketProcessorRouter(gnrsNA, new HashMap<GUID, NA>(), routingt2, na2, neighbor2);
+        PacketProcessor n2 = new PacketProcessorRouter(gnrsNA, new HashMap<GUID, NA>(), routingt2, na2, neighbor2);
         n2.print(System.out.printf("n2:")).println();
         n2.printNeighbors(System.out.printf("===Neighbors===%n")).printf("==ENDNeighbors===%n");
-        n2.printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
+        ((PacketProcessorRouter) n2).printRoutingTable(System.out.printf("===Routing===%n")).printf("==ENDInterface===%n");
         n2.start();
 
         //router 3
