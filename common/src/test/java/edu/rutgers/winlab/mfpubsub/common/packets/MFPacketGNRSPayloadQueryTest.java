@@ -47,11 +47,14 @@ public class MFPacketGNRSPayloadQueryTest {
         l2guid.print(System.out.printf("l2guid=")).println();
         NA srcNa = new NA(Helper.getRandomInt());
         srcNa.print(System.out.printf("srcNa=")).println();
-        NA dstNa = new NA(Helper.getRandomInt());
+
+//        NA dstNa = new NA(Helper.getRandomInt());
+        NA dstNa = new NA(Integer.MAX_VALUE);
+        System.out.println("integer max: " + Integer.MAX_VALUE);
         dstNa.print(System.out.printf("dstNa=")).println();
 
-        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa, new MFPacketGNRSPayloadQuery(guid));
-//        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa, new MFPacketGNRSPayloadResponse(guid, new NA(4)));
+//        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa, new MFPacketGNRSPayloadQuery(guid));
+        MFPacketGNRS pkt = new MFPacketGNRS(srcNa, dstNa, new MFPacketGNRSPayloadResponse(guid, new NA(4)));
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         pkt.serialize(baos);
