@@ -8,6 +8,7 @@ package edu.rutgers.winlab.mfpubsub.topomanager;
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterface;
 import edu.rutgers.winlab.mfpubsub.common.elements.NetworkInterfaceUDP;
 import edu.rutgers.winlab.mfpubsub.common.elements.PacketProcessor;
+import edu.rutgers.winlab.mfpubsub.common.Helper;
 import edu.rutgers.winlab.mfpubsub.common.packets.MFPacket;
 import edu.rutgers.winlab.mfpubsub.common.structure.GUID;
 import edu.rutgers.winlab.mfpubsub.common.structure.NA;
@@ -19,7 +20,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  *
@@ -34,7 +34,7 @@ public class TopologyManager {
     private NA GNRSna;
     private GUID PubSubguid;
     private NA PubSubna;
-    private HashMap<NA, ArrayList<NA>> neighbors = new HashMap<>();
+    private final HashMap<NA, ArrayList<NA>> neighbors = new HashMap<>();
 
     public TopologyManager(NA self, String filename, String tracefile, String ID, int port, String selfIP, String ctrlIP) throws IOException {
 //        PacketProcessor pro = readTopo(self, filename, ID);
@@ -45,6 +45,7 @@ public class TopologyManager {
     }
 
     private GUID createGUID(byte[] guid) throws IOException {
+        Helper.printBuf(System.out.printf("GUID byte[]: "), guid, 0, guid.length).println();
         if (guid.length == GUID.GUID_LENGTH) {
             return new GUID(guid);
         } else {
@@ -62,11 +63,11 @@ public class TopologyManager {
                 case "router":
                     return doRouter(NAIP, buf);
                 case "endhost":
-                    return doEndHost(NAIP, self, buf);
+                    return doEndHost(NAIP, buf);
                 case "GNRS":
-                    return doGNRS(NAIP, self, buf);
+                    return doGNRS(NAIP, buf);
                 case "PubSub Node":
-                    return doPubSubNode(NAIP, self, buf);
+                    return doPubSubNode(NAIP, buf);
                 default:
                     throw new IOException("don't  understand which element you want to create");
             }
@@ -88,6 +89,9 @@ public class TopologyManager {
                     //build localGUID table here
                     if (self.getVal() == Integer.getInteger(address[2])) {
                         localGUIDTable.put(createGUID(address[0].getBytes()), new NA(Integer.getInteger(address[1])));
+                        neighbor.put(new NA(Integer.getInteger(address[1])), new NetworkInterfaceUDP(
+                                new InetSocketAddress(NAIP.get(address[2]), Integer.getInteger(address[3])),
+                                new InetSocketAddress(NAIP.get(address[1]), Integer.getInteger(address[3]))));
                     }
                     break;
                 case 5:
@@ -96,17 +100,15 @@ public class TopologyManager {
                     if (self.getVal() == Integer.getInteger(address[0])) {
                         //update neighbor/routing/localGUIDTable
                         NA nbr = new NA(Integer.getInteger(address[2]));
-                        neighbor.put(nbr,
-                                new NetworkInterfaceUDP(
-                                        new InetSocketAddress(NAIP.get(address[0]), Integer.getInteger(address[1])),
-                                        new InetSocketAddress(NAIP.get(address[2]), Integer.getInteger(address[3]))));
+                        neighbor.put(nbr, new NetworkInterfaceUDP(
+                                new InetSocketAddress(NAIP.get(address[0]), Integer.getInteger(address[1])),
+                                new InetSocketAddress(NAIP.get(address[2]), Integer.getInteger(address[3]))));
                         routing.put(nbr, nbr);
                     } else if (self.getVal() == Integer.getInteger(address[2])) {
                         NA nbr = new NA(Integer.getInteger(address[0]));
-                        neighbor.put(nbr,
-                                new NetworkInterfaceUDP(
-                                        new InetSocketAddress(NAIP.get(address[2]), Integer.getInteger(address[3])),
-                                        new InetSocketAddress(NAIP.get(address[0]), Integer.getInteger(address[1]))));
+                        neighbor.put(nbr, new NetworkInterfaceUDP(
+                                new InetSocketAddress(NAIP.get(address[2]), Integer.getInteger(address[3])),
+                                new InetSocketAddress(NAIP.get(address[0]), Integer.getInteger(address[1]))));
                         routing.put(nbr, nbr);
                     }
                     break;
@@ -116,25 +118,25 @@ public class TopologyManager {
         }
         //build routing table here
         for (NA nbr : routing.keySet()) {
-            LookForR(routing, nbr);
+            LookForR(routing, nbr, nbr);
         }
         return new PacketProcessorRouter(GNRSna, localGUIDTable, routing, self, neighbor);
     }
 
-    private PacketProcessor doEndHost(HashMap<String, String> NAIP, NA self, BufferedReader buf) {
+    private PacketProcessor doEndHost(HashMap<String, String> NAIP, BufferedReader buf) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    private PacketProcessor doGNRS(HashMap<String, String> NAIP, NA self, BufferedReader buf) {
+    private PacketProcessor doGNRS(HashMap<String, String> NAIP, BufferedReader buf) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    private PacketProcessor doPubSubNode(HashMap<String, String> NAIP, NA self, BufferedReader buf) {
+    private PacketProcessor doPubSubNode(HashMap<String, String> NAIP, BufferedReader buf) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     private void initial(String[] address, BufferedReader buf) throws IOException {
-        GNRSguid = createGUID(address[0].getBytes());
+        GNRSguid = createGUID(address[0].getBytes("UTF-8"));
         GNRSna = new NA(Integer.getInteger(address[1]));
         address = buf.readLine().split(" ");
         //PubSub node
@@ -155,10 +157,12 @@ public class TopologyManager {
         tmp2.add(na1);
     }
 
-    private void LookForR(HashMap<NA, NA> routing, NA nbr) {
+    private void LookForR(HashMap<NA, NA> routing, NA nbr, NA nextNA) {
+        routing.put(nbr, nextNA);
         for (NA i : neighbors.get(nbr)) {
-            if (!routing.containsKey(i) && i.equals(self)) {
-
+            // if i != self, i haven't added into the routing table
+            if (!(routing.containsKey(i) || i.equals(self))) {
+                LookForR(routing, i, nextNA);
             }
         }
     }
@@ -192,6 +196,17 @@ public class TopologyManager {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
+        public void printInnerElemTables() throws IOException {
+            if (processor instanceof PacketProcessorRouter) {
+                PacketProcessorRouter tmp = (PacketProcessorRouter) processor;
+                tmp.printNeighbors(System.out.printf("\n********neighbor********\n")).println();
+                tmp.printRoutingTable(System.out.printf("\n********neighbor********\n")).println();
+            }
+        }
+    }
+
+    public void printInnerTables() throws IOException {
+        manager.printInnerElemTables();
     }
 
 }
