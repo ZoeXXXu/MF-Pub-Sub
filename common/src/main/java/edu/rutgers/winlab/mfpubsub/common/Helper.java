@@ -47,6 +47,7 @@ public class Helper {
     public static PrintStream printBuf(PrintStream ps, byte[] buf, int start, int len) {
         for (int i = 0; i < len - 1; i++) {
             ps.printf("%02x ", buf[start + i]);
+//            ps.printf("%8s ", Integer.toBinaryString(buf[start + i] & 0xFF).replace(" ", "0"));
         }
         ps.printf("%02x", buf[start + len - 1]);
         return ps;
