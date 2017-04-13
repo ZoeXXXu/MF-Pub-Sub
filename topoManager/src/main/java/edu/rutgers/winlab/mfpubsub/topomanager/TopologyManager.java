@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
+import static sun.jdbc.odbc.JdbcOdbcObject.hexStringToByteArray;
 
 /**
  *
@@ -45,7 +46,7 @@ public class TopologyManager {
     }
 
     private GUID createGUID(byte[] guid) throws IOException {
-        Helper.printBuf(System.out.printf("GUID byte[]: "), guid, 0, guid.length).println();
+//        Helper.printBuf(System.out.printf("GUID byte[]: "), guid, 0, guid.length).println();
         if (guid.length == GUID.GUID_LENGTH) {
             return new GUID(guid);
         } else {
@@ -79,36 +80,40 @@ public class TopologyManager {
         HashMap<NA, NetworkInterface> neighbor = new HashMap<>();
         HashMap<NA, NA> routing = new HashMap<>();
         HashMap<GUID, NA> localGUIDTable = new HashMap<>();
+        String line;
         String[] address;
-        while ((address = buf.readLine().split(" ")) != null) {
+        while ((line = buf.readLine()) != null) {
+            address = line.split(" ");
             switch (address.length) {
                 case 2:
                     NAIP.put(address[0], address[1]);
                     break;
                 case 4:
                     //build localGUID table here
-                    if (self.getVal() == Integer.getInteger(address[2])) {
-                        localGUIDTable.put(createGUID(address[0].getBytes()), new NA(Integer.getInteger(address[1])));
-                        neighbor.put(new NA(Integer.getInteger(address[1])), new NetworkInterfaceUDP(
-                                new InetSocketAddress(NAIP.get(address[2]), Integer.getInteger(address[3])),
-                                new InetSocketAddress(NAIP.get(address[1]), Integer.getInteger(address[3]))));
+                    int tmp = Integer.parseInt(address[2], 16);
+                    if (self.getVal() == tmp) {
+                        localGUIDTable.put(createGUID(hexStringToByteArray(address[0])), new NA(Integer.parseInt(address[1], 16)));
+//                        neighbor.put(new NA(Integer.parseInt(address[1], 16)), new NetworkInterfaceUDP(
+//                                new InetSocketAddress(NAIP.get(address[2]), Integer.parseInt(address[3], 16)),
+//                                new InetSocketAddress(NAIP.get(address[1]), Integer.parseInt(address[3], 16))));
                     }
                     break;
                 case 5:
                     //build neighbor table here
-                    AddNeighbors(neighbors, new NA(Integer.getInteger(address[2])), new NA(Integer.getInteger(address[0])));
-                    if (self.getVal() == Integer.getInteger(address[0])) {
+                    AddNeighbors(neighbors, new NA(Integer.parseInt(address[2], 16)), new NA(Integer.parseInt(address[0], 16)));
+                    if (self.getVal() == Integer.parseInt(address[0], 16)) {
                         //update neighbor/routing/localGUIDTable
-                        NA nbr = new NA(Integer.getInteger(address[2]));
-                        neighbor.put(nbr, new NetworkInterfaceUDP(
-                                new InetSocketAddress(NAIP.get(address[0]), Integer.getInteger(address[1])),
-                                new InetSocketAddress(NAIP.get(address[2]), Integer.getInteger(address[3]))));
+                        NA nbr = new NA(Integer.parseInt(address[2], 16));
+//                        neighbor.put(nbr, new NetworkInterfaceUDP(
+//                                new InetSocketAddress(NAIP.get(address[0]), Integer.parseInt(address[1], 16)),
+//                                new InetSocketAddress(NAIP.get(address[2]), Integer.parseInt(address[3], 16))));
                         routing.put(nbr, nbr);
-                    } else if (self.getVal() == Integer.getInteger(address[2])) {
-                        NA nbr = new NA(Integer.getInteger(address[0]));
-                        neighbor.put(nbr, new NetworkInterfaceUDP(
-                                new InetSocketAddress(NAIP.get(address[2]), Integer.getInteger(address[3])),
-                                new InetSocketAddress(NAIP.get(address[0]), Integer.getInteger(address[1]))));
+                    }
+                    if (self.getVal() == Integer.parseInt(address[2], 16)) {
+                        NA nbr = new NA(Integer.parseInt(address[0], 16));
+//                        neighbor.put(nbr, new NetworkInterfaceUDP(
+//                                new InetSocketAddress(NAIP.get(address[2]), Integer.parseInt(address[3], 16)),
+//                                new InetSocketAddress(NAIP.get(address[0]), Integer.parseInt(address[1], 16))));
                         routing.put(nbr, nbr);
                     }
                     break;
@@ -136,12 +141,12 @@ public class TopologyManager {
     }
 
     private void initial(String[] address, BufferedReader buf) throws IOException {
-        GNRSguid = createGUID(address[0].getBytes("UTF-8"));
-        GNRSna = new NA(Integer.getInteger(address[1]));
+        GNRSguid = createGUID(hexStringToByteArray(address[0]));
+        GNRSna = new NA(Integer.parseInt(address[1], 16));
         address = buf.readLine().split(" ");
         //PubSub node
-        PubSubguid = createGUID(address[0].getBytes());
-        PubSubna = new NA(Integer.getInteger(address[1]));
+        PubSubguid = createGUID(hexStringToByteArray(address[0]));
+        PubSubna = new NA(Integer.parseInt(address[1], 16));
     }
 
     private void AddNeighbors(HashMap<NA, ArrayList<NA>> neighbors, NA na1, NA na2) {
@@ -173,7 +178,7 @@ public class TopologyManager {
 
         public PacketProcessorTopologyManager(HashMap<NA, NetworkInterface> neighbor, PacketProcessor processor, String tracefile) throws FileNotFoundException {
             super(processor.getNa(), neighbor);//one neighbor with ctrl center
-            extractSelfTrace(new BufferedReader(new FileReader(tracefile)));
+//            extractSelfTrace(new BufferedReader(new FileReader(tracefile)));
             this.processor = processor;
         }
 
@@ -200,7 +205,7 @@ public class TopologyManager {
             if (processor instanceof PacketProcessorRouter) {
                 PacketProcessorRouter tmp = (PacketProcessorRouter) processor;
                 tmp.printNeighbors(System.out.printf("\n********neighbor********\n")).println();
-                tmp.printRoutingTable(System.out.printf("\n********neighbor********\n")).println();
+                tmp.printRoutingTable(System.out.printf("\n********routing********\n")).println();
             }
         }
     }
