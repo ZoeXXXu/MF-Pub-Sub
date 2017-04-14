@@ -83,7 +83,6 @@ public class PacketProcessorGNRS extends PacketProcessor {
     private void renewMulticast(MFPacketGNRSPayloadAssoc assoc) throws IOException {
 //        System.out.println("numberofbranches " + assoc.getNumofbranches());
         if (assoc.getNumofbranches() != 0) {//pubsub-assoc msg
-            //**********************But didn't need it anymore, the Graph Table is stored at PubSub Node**********************
             switch (assoc.getAdd()) {
                 case MFPacketGNRSPayloadAssoc.MF_GNRS_PACKET_PAYLOAD_TYPE_ASSOC_SUB:
 //                    System.out.println("sub");
@@ -99,7 +98,6 @@ public class PacketProcessorGNRS extends PacketProcessor {
         } else {//the normal GNRS update msg
             AddrTable.put(assoc.getTopicGUID(), assoc.getRP());
         }
-        //*************************************************************************************************************************
         AddrTable.put(assoc.getTopicGUID(), assoc.getRP());
         if (pendingTable.containsKey(assoc.getTopicGUID())) {
             ArrayList<MFPacketGNRS> packets = pendingTable.get(assoc.getTopicGUID());
